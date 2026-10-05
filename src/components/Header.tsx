@@ -33,7 +33,9 @@ import {
   MoreHorizontal,
   Check,
   Image as ImageIcon,
-  FileUp
+  FileUp,
+  Lock,
+  FileCode
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
@@ -497,6 +499,22 @@ export const Header: React.FC = () => {
                     <div className="text-[10px] text-zinc-500 font-normal">Blackout & sanitize data</div>
                   </div>
                 </button>
+
+                <div className="border-t border-zinc-200 dark:border-zinc-800 my-0.5" />
+
+                <button
+                  onClick={() => {
+                    setActiveModal('protect');
+                    setShowProtectMenu(false);
+                  }}
+                  className="flex items-center gap-2.5 px-2.5 py-2 text-xs rounded-lg text-left transition-colors text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                >
+                  <Lock className="w-4 h-4 text-indigo-500" />
+                  <div>
+                    <div className="font-semibold text-indigo-600 dark:text-indigo-400">Protect & Encrypt</div>
+                    <div className="text-[10px] text-zinc-500 font-normal">AES-256 password & permissions</div>
+                  </div>
+                </button>
               </div>
             )}
           </div>
@@ -766,6 +784,36 @@ export const Header: React.FC = () => {
                     <div>
                       <div className="font-semibold">Images to PDF</div>
                       <div className="text-[10px] text-zinc-500">Convert JPG/PNG images to PDF</div>
+                    </div>
+                  </button>
+
+                  <div className="my-1 border-t border-zinc-200 dark:border-zinc-800" />
+
+                  <button
+                    onClick={() => {
+                      setActiveModal('wordConverter');
+                      setShowToolsMenu(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors text-left"
+                  >
+                    <FileCode className="w-4 h-4 text-blue-500" />
+                    <div>
+                      <div className="font-semibold">Word (.docx) Studio</div>
+                      <div className="text-[10px] text-zinc-500">Two-way PDF ↔ Word conversion</div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setActiveModal('protect');
+                      setShowToolsMenu(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors text-left"
+                  >
+                    <Lock className="w-4 h-4 text-indigo-500" />
+                    <div>
+                      <div className="font-semibold">Protect & Password</div>
+                      <div className="text-[10px] text-zinc-500">AES encryption & metadata scrub</div>
                     </div>
                   </button>
                 </div>

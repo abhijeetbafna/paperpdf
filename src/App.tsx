@@ -12,6 +12,8 @@ import { CompressModal } from './components/Modals/CompressModal';
 import { PageNumbersModal } from './components/Modals/PageNumbersModal';
 import { PdfToImagesModal } from './components/Modals/PdfToImagesModal';
 import { ImagesToPdfModal } from './components/Modals/ImagesToPdfModal';
+import { ProtectModal } from './components/Modals/ProtectModal';
+import { WordConverterModal } from './components/Modals/WordConverterModal';
 
 export const App: React.FC = () => {
   const { documentBytes, activeModal, isLoading, loadingMessage } = usePDFStore();
@@ -43,6 +45,8 @@ export const App: React.FC = () => {
       {activeModal === 'pageNumbers' && <PageNumbersModal />}
       {activeModal === 'pdfToImages' && <PdfToImagesModal />}
       {activeModal === 'imagesToPdf' && <ImagesToPdfModal />}
+      {activeModal === 'protect' && <ProtectModal />}
+      {activeModal === 'wordConverter' && <WordConverterModal />}
 
       {/* Loading Overlay */}
       {isLoading && (
