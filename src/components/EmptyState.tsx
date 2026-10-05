@@ -11,7 +11,8 @@ import {
   Lock,
   Zap,
   FileUp,
-  FileCode
+  FileCode,
+  Presentation
 } from 'lucide-react';
 
 export const EmptyState: React.FC = () => {
@@ -117,64 +118,76 @@ export const EmptyState: React.FC = () => {
         </div>
 
         {/* Quick Tool Launchers */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 pt-2 text-left">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 pt-2 text-left">
           <div 
             onClick={() => setActiveModal('imagesToPdf')}
-            className="p-3 rounded-xl bg-white/60 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800/80 hover:border-emerald-500/50 dark:hover:border-emerald-500/50 cursor-pointer transition-all shadow-sm hover:scale-[1.02]"
+            className="p-2.5 rounded-xl bg-white/60 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800/80 hover:border-emerald-500/50 dark:hover:border-emerald-500/50 cursor-pointer transition-all shadow-sm hover:scale-[1.02]"
           >
             <div className="flex items-center gap-1.5 mb-1 text-xs font-semibold text-zinc-800 dark:text-zinc-200">
               <FileUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> Images to PDF
             </div>
             <p className="text-[10px] text-zinc-500 leading-tight">
-              Combine JPG/PNG to PDF.
+              Combine JPG/PNG.
             </p>
           </div>
 
           <div 
             onClick={() => setActiveModal('wordConverter')}
-            className="p-3 rounded-xl bg-white/60 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800/80 hover:border-blue-500/50 dark:hover:border-blue-500/50 cursor-pointer transition-all shadow-sm hover:scale-[1.02]"
+            className="p-2.5 rounded-xl bg-white/60 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800/80 hover:border-blue-500/50 dark:hover:border-blue-500/50 cursor-pointer transition-all shadow-sm hover:scale-[1.02]"
           >
             <div className="flex items-center gap-1.5 mb-1 text-xs font-semibold text-zinc-800 dark:text-zinc-200">
               <FileCode className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" /> Word Studio
             </div>
             <p className="text-[10px] text-zinc-500 leading-tight">
-              Two-way PDF ↔ .docx.
+              PDF ↔ DOCX.
+            </p>
+          </div>
+
+          <div 
+            onClick={() => setActiveModal('pdfToPpt')}
+            className="p-2.5 rounded-xl bg-white/60 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800/80 hover:border-orange-500/50 dark:hover:border-orange-500/50 cursor-pointer transition-all shadow-sm hover:scale-[1.02]"
+          >
+            <div className="flex items-center gap-1.5 mb-1 text-xs font-semibold text-zinc-800 dark:text-zinc-200">
+              <Presentation className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" /> PDF to PPT
+            </div>
+            <p className="text-[10px] text-zinc-500 leading-tight">
+              Export 16:9 Slides.
             </p>
           </div>
 
           <div 
             onClick={() => setActiveModal('merge')}
-            className="p-3 rounded-xl bg-white/60 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer transition-colors shadow-sm"
+            className="p-2.5 rounded-xl bg-white/60 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer transition-colors shadow-sm"
           >
             <div className="flex items-center gap-1.5 mb-1 text-xs font-semibold text-zinc-800 dark:text-zinc-200">
               <Combine className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" /> Merge PDFs
             </div>
             <p className="text-[10px] text-zinc-500 leading-tight">
-              Combine multiple files.
+              Combine files.
             </p>
           </div>
 
           <div 
             onClick={() => setActiveModal('split')}
-            className="p-3 rounded-xl bg-white/60 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer transition-colors shadow-sm"
+            className="p-2.5 rounded-xl bg-white/60 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer transition-colors shadow-sm"
           >
             <div className="flex items-center gap-1.5 mb-1 text-xs font-semibold text-zinc-800 dark:text-zinc-200">
               <Scissors className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" /> Split Pages
             </div>
             <p className="text-[10px] text-zinc-500 leading-tight">
-              Extract page ranges.
+              Extract ranges.
             </p>
           </div>
 
           <div 
             onClick={() => setActiveModal('organize')}
-            className="p-3 rounded-xl bg-white/60 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer transition-colors shadow-sm col-span-2 sm:col-span-1"
+            className="p-2.5 rounded-xl bg-white/60 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer transition-colors shadow-sm"
           >
             <div className="flex items-center gap-1.5 mb-1 text-xs font-semibold text-zinc-800 dark:text-zinc-200">
               <Edit3 className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" /> Reorder
             </div>
             <p className="text-[10px] text-zinc-500 leading-tight">
-              Rotate & delete pages.
+              Rotate & delete.
             </p>
           </div>
         </div>

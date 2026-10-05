@@ -18,6 +18,7 @@ import { OcrModal } from './components/Modals/OcrModal';
 import { FormResponsesModal } from './components/Modals/FormResponsesModal';
 import { PdfDiffModal } from './components/Modals/PdfDiffModal';
 import { TableExtractorModal } from './components/Modals/TableExtractorModal';
+import { PdfToPptModal } from './components/Modals/PdfToPptModal';
 
 export const App: React.FC = () => {
   const { documentBytes, activeModal, isLoading, loadingMessage } = usePDFStore();
@@ -55,6 +56,7 @@ export const App: React.FC = () => {
       {activeModal === 'formResponses' && <FormResponsesModal />}
       {activeModal === 'pdfDiff' && <PdfDiffModal />}
       {activeModal === 'tableExtractor' && <TableExtractorModal />}
+      {activeModal === 'pdfToPpt' && <PdfToPptModal />}
 
       {/* Loading Overlay */}
       {isLoading && (

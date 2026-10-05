@@ -40,7 +40,8 @@ import {
   CheckSquare,
   FileSpreadsheet,
   GitCompare,
-  Table
+  Table,
+  Presentation
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
@@ -879,6 +880,22 @@ export const Header: React.FC = () => {
 
                       <button
                         onClick={() => {
+                          setActiveModal('pdfToPpt');
+                          setShowToolsMenu(false);
+                        }}
+                        className="flex items-center gap-2.5 p-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-left group"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-orange-50 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400 flex items-center justify-center shrink-0">
+                          <Presentation className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-orange-600 transition-colors">PDF to PPT (Slides)</div>
+                          <div className="text-[10px] text-zinc-500">Convert to PowerPoint .pptx</div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => {
                           setActiveModal('ocr');
                           setShowToolsMenu(false);
                         }}
@@ -914,14 +931,14 @@ export const Header: React.FC = () => {
                           setActiveModal('imagesToPdf');
                           setShowToolsMenu(false);
                         }}
-                        className="flex items-center gap-2.5 p-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-left group"
+                        className="flex items-center gap-2.5 p-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-left group sm:col-span-2"
                       >
                         <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                           <FileUp className="w-3.5 h-3.5" />
                         </div>
                         <div>
                           <div className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-emerald-600 transition-colors">Images to PDF</div>
-                          <div className="text-[10px] text-zinc-500">Convert JPG/PNG to PDF</div>
+                          <div className="text-[10px] text-zinc-500">Convert JPG/PNG images to PDF</div>
                         </div>
                       </button>
                     </div>
@@ -1103,6 +1120,277 @@ export const Header: React.FC = () => {
           </>
         ) : (
           <div className="flex items-center gap-2">
+            {/* Tools ▾ Mega-Menu on Landing Page */}
+            <div ref={toolsMenuRef} className="relative">
+              <button
+                onClick={() => setShowToolsMenu(!showToolsMenu)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-800 dark:text-zinc-200 transition-colors shadow-sm"
+                title="All PDF Tools & Surgery Studio"
+              >
+                <Layers className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                <span>Tools</span>
+                <ChevronDown className="w-3 h-3 text-zinc-500 opacity-70" />
+              </button>
+
+              {showToolsMenu && (
+                <div className="absolute right-0 top-10 w-[490px] max-w-[95vw] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-3.5 z-50 animate-popover max-h-[calc(100vh-4.2rem)] overflow-y-auto space-y-3 select-none">
+                  
+                  {/* Category 1: Page Surgery & Structure */}
+                  <div>
+                    <div className="px-1.5 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                      Page Surgery & Structure
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                      <button
+                        onClick={() => {
+                          setActiveModal('organize');
+                          setShowToolsMenu(false);
+                        }}
+                        className="flex items-center gap-2.5 p-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-left group"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                          <LayoutGrid className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-blue-600 transition-colors">Organize Pages</div>
+                          <div className="text-[10px] text-zinc-500">Reorder, rotate & delete</div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setActiveModal('merge');
+                          setShowToolsMenu(false);
+                        }}
+                        className="flex items-center gap-2.5 p-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-left group"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                          <Combine className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-emerald-600 transition-colors">Merge PDFs</div>
+                          <div className="text-[10px] text-zinc-500">Combine multiple files</div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setActiveModal('split');
+                          setShowToolsMenu(false);
+                        }}
+                        className="flex items-center gap-2.5 p-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-left group"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                          <Scissors className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-amber-600 transition-colors">Split PDF</div>
+                          <div className="text-[10px] text-zinc-500">Extract selected ranges</div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setActiveModal('compress');
+                          setShowToolsMenu(false);
+                        }}
+                        className="flex items-center gap-2.5 p-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-left group"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                          <Zap className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-emerald-600 transition-colors">Compress PDF</div>
+                          <div className="text-[10px] text-zinc-500">Reduce file size locally</div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setActiveModal('pageNumbers');
+                          setShowToolsMenu(false);
+                        }}
+                        className="flex items-center gap-2.5 p-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-left group sm:col-span-2"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                          <Hash className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-indigo-600 transition-colors">Page Numbers & Headers</div>
+                          <div className="text-[10px] text-zinc-500">Add dynamic pagination, Bates numbering & labels</div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-zinc-200 dark:border-zinc-800" />
+
+                  {/* Category 2: Conversions & Office */}
+                  <div>
+                    <div className="px-1.5 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                      Conversions & Office Studio
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                      <button
+                        onClick={() => {
+                          setActiveModal('wordConverter');
+                          setShowToolsMenu(false);
+                        }}
+                        className="flex items-center gap-2.5 p-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-left group"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                          <FileCode className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-blue-600 transition-colors">Word (.docx) Studio</div>
+                          <div className="text-[10px] text-zinc-500">Two-way PDF ↔ Word</div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setActiveModal('pdfToPpt');
+                          setShowToolsMenu(false);
+                        }}
+                        className="flex items-center gap-2.5 p-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-left group"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-orange-50 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400 flex items-center justify-center shrink-0">
+                          <Presentation className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-orange-600 transition-colors">PDF to PPT (Slides)</div>
+                          <div className="text-[10px] text-zinc-500">Convert to PowerPoint .pptx</div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setActiveModal('ocr');
+                          setShowToolsMenu(false);
+                        }}
+                        className="flex items-center gap-2.5 p-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-left group"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                          <ScanText className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-purple-600 transition-colors">OCR (Text Scan)</div>
+                          <div className="text-[10px] text-zinc-500">Make scans searchable</div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setActiveModal('pdfToImages');
+                          setShowToolsMenu(false);
+                        }}
+                        className="flex items-center gap-2.5 p-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-left group"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                          <ImageIcon className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-blue-600 transition-colors">PDF to Images</div>
+                          <div className="text-[10px] text-zinc-500">High-DPI PNG / JPG / ZIP</div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setActiveModal('imagesToPdf');
+                          setShowToolsMenu(false);
+                        }}
+                        className="flex items-center gap-2.5 p-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-left group sm:col-span-2"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                          <FileUp className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-emerald-600 transition-colors">Images to PDF</div>
+                          <div className="text-[10px] text-zinc-500">Convert JPG/PNG images to PDF</div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-zinc-200 dark:border-zinc-800" />
+
+                  {/* Category 3: Intelligence & Security */}
+                  <div>
+                    <div className="px-1.5 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                      Document Intelligence & Security
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                      <button
+                        onClick={() => {
+                          setActiveModal('pdfDiff');
+                          setShowToolsMenu(false);
+                        }}
+                        className="flex items-center gap-2.5 p-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-left group"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                          <GitCompare className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-indigo-600 transition-colors">Visual Diff & Redline</div>
+                          <div className="text-[10px] text-zinc-500">Compare 2 drafts with swipe</div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setActiveModal('tableExtractor');
+                          setShowToolsMenu(false);
+                        }}
+                        className="flex items-center gap-2.5 p-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-left group"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                          <Table className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-emerald-600 transition-colors">Smart Table to Excel</div>
+                          <div className="text-[10px] text-zinc-500">Extract tables to .xlsx/CSV</div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setActiveModal('formResponses');
+                          setShowToolsMenu(false);
+                        }}
+                        className="flex items-center gap-2.5 p-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-left group"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                          <FileSpreadsheet className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-amber-600 transition-colors">Form Data (JSON/CSV)</div>
+                          <div className="text-[10px] text-zinc-500">Inspect & auto-fill data</div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setActiveModal('protect');
+                          setShowToolsMenu(false);
+                        }}
+                        className="flex items-center gap-2.5 p-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-left group"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                          <Lock className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-indigo-600 transition-colors">Protect & Password</div>
+                          <div className="text-[10px] text-zinc-500">AES encryption & sanitize</div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+              )}
+            </div>
+
             <button
               onClick={toggleTheme}
               className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
