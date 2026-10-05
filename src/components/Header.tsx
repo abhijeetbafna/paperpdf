@@ -38,7 +38,9 @@ import {
   FileCode,
   ScanText,
   CheckSquare,
-  FileSpreadsheet
+  FileSpreadsheet,
+  GitCompare,
+  Table
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
@@ -907,6 +909,38 @@ export const Header: React.FC = () => {
                       <div className="text-[10px] text-zinc-500">Inspect & export responses</div>
                     </div>
                   </button>
+
+                  <div className="my-1 border-t border-zinc-200 dark:border-zinc-800" />
+
+                  <button
+                    onClick={() => {
+                      setActiveModal('pdfDiff');
+                      setShowToolsMenu(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors text-left"
+                  >
+                    <GitCompare className="w-4 h-4 text-indigo-500" />
+                    <div>
+                      <div className="font-semibold">Visual Diff & Redline</div>
+                      <div className="text-[10px] text-zinc-500">Compare 2 drafts with swipe/ghost</div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setActiveModal('tableExtractor');
+                      setShowToolsMenu(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors text-left"
+                  >
+                    <Table className="w-4 h-4 text-emerald-500" />
+                    <div>
+                      <div className="font-semibold">Smart Table to Excel</div>
+                      <div className="text-[10px] text-zinc-500">Extract tables to .xlsx & CSV</div>
+                    </div>
+                  </button>
+
+                  <div className="my-1 border-t border-zinc-200 dark:border-zinc-800" />
 
                   <button
                     onClick={() => {
