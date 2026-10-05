@@ -610,6 +610,84 @@ export async function exportModifiedPDF(
       } catch (err) {
         console.error('Failed to embed signature image:', err);
       }
+    } else if (ann.type === 'image' && ann.dataUrl) {
+      try {
+        const imageBytes = await fetch(ann.dataUrl).then((res) => res.arrayBuffer());
+        let embeddedImage;
+        try {
+          if (ann.dataUrl.includes('png') || ann.name?.toLowerCase().endsWith('.png')) {
+            embeddedImage = await pdfDoc.embedPng(imageBytes);
+          } else {
+            embeddedImage = await pdfDoc.embedJpg(imageBytes);
+          }
+        } catch {
+          // Fallback: draw through canvas
+          embeddedImage = await pdfDoc.embedPng(imageBytes);
+        }
+
+        const pdfX = ann.domX;
+        const pdfY = pageHeight - ann.domY - ann.height;
+        page.drawImage(embeddedImage, {
+          x: pdfX,
+          y: pdfY,
+          width: ann.width,
+          height: ann.height,
+          opacity: ann.opacity !== undefined ? ann.opacity : 1.0,
+          rotate: degrees(ann.rotation || 0),
+        });
+      } catch (err) {
+        console.error('Failed to embed image annotation:', err);
+      }
+    } else if (ann.type === 'form-field') {
+      try {
+        const form = pdfDoc.getForm();
+        const pdfX = ann.domX;
+        const pdfY = pageHeight - ann.domY - ann.height;
+
+        if (ann.fieldType === 'text') {
+          const textField = form.createTextField(ann.name || `text_${ann.id}`);
+          textField.setText(String(ann.value || ''));
+          textField.addToPage(page, {
+            x: pdfX,
+            y: pdfY,
+            width: ann.width,
+            height: ann.height,
+            borderWidth: 1,
+            borderColor: hexToRgb(ann.borderColor || '#cbd5e1'),
+          });
+        } else if (ann.fieldType === 'checkbox') {
+          const checkBox = form.createCheckBox(ann.name || `check_${ann.id}`);
+          if (ann.value === true || ann.value === 'true') {
+            checkBox.check();
+          }
+          checkBox.addToPage(page, {
+            x: pdfX,
+            y: pdfY,
+            width: ann.width,
+            height: ann.height,
+            borderWidth: 1,
+            borderColor: hexToRgb(ann.borderColor || '#cbd5e1'),
+          });
+        } else if (ann.fieldType === 'dropdown') {
+          const dropdown = form.createDropdown(ann.name || `drop_${ann.id}`);
+          if (ann.options && ann.options.length > 0) {
+            dropdown.setOptions(ann.options);
+            if (ann.value && typeof ann.value === 'string') {
+              dropdown.select(ann.value);
+            }
+          }
+          dropdown.addToPage(page, {
+            x: pdfX,
+            y: pdfY,
+            width: ann.width,
+            height: ann.height,
+            borderWidth: 1,
+            borderColor: hexToRgb(ann.borderColor || '#cbd5e1'),
+          });
+        }
+      } catch (err) {
+        console.error('Failed to embed interactive form field:', err);
+      }
     }
   }
 

@@ -15,6 +15,7 @@ import { ImagesToPdfModal } from './components/Modals/ImagesToPdfModal';
 import { ProtectModal } from './components/Modals/ProtectModal';
 import { WordConverterModal } from './components/Modals/WordConverterModal';
 import { OcrModal } from './components/Modals/OcrModal';
+import { FormResponsesModal } from './components/Modals/FormResponsesModal';
 
 export const App: React.FC = () => {
   const { documentBytes, activeModal, isLoading, loadingMessage } = usePDFStore();
@@ -49,6 +50,7 @@ export const App: React.FC = () => {
       {activeModal === 'protect' && <ProtectModal />}
       {activeModal === 'wordConverter' && <WordConverterModal />}
       {activeModal === 'ocr' && <OcrModal />}
+      {activeModal === 'formResponses' && <FormResponsesModal />}
 
       {/* Loading Overlay */}
       {isLoading && (

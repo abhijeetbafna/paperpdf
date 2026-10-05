@@ -36,7 +36,9 @@ import {
   FileUp,
   Lock,
   FileCode,
-  ScanText
+  ScanText,
+  CheckSquare,
+  FileSpreadsheet
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
@@ -64,11 +66,15 @@ export const Header: React.FC = () => {
     loadDocument,
     loadSampleDocument,
     setActiveModal,
+    addAnnotation,
+    selectAnnotation,
+    currentPage,
     theme,
     toggleTheme
   } = usePDFStore();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   // Dropdown States
   const [showEditMenu, setShowEditMenu] = useState(false);
@@ -144,6 +150,44 @@ export const Header: React.FC = () => {
     }
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const dataUrl = event.target?.result as string;
+        const img = new Image();
+        img.onload = () => {
+          const maxDim = 180;
+          const naturalW = img.naturalWidth || 180;
+          const naturalH = img.naturalHeight || 180;
+          const scale = Math.min(maxDim / naturalW, maxDim / naturalH, 1.0);
+          const w = Math.round(naturalW * scale);
+          const h = Math.round(naturalH * scale);
+
+          const newImageAnn = {
+            id: `img-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            type: 'image' as const,
+            pageIndex: Math.max(0, (currentPage || 1) - 1),
+            domX: 100,
+            domY: 150,
+            width: w,
+            height: h,
+            dataUrl,
+            name: file.name,
+            opacity: 1.0,
+            rotation: 0,
+            aspectRatioLocked: true,
+          };
+          addAnnotation(newImageAnn);
+          selectAnnotation(newImageAnn.id);
+        };
+        img.src = dataUrl;
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return '0 B';
     const k = 1024;
@@ -153,7 +197,7 @@ export const Header: React.FC = () => {
   };
 
   // Group active checks
-  const isEditActive = activeTool === 'add-text' || activeTool === 'text' || activeTool === 'edit-text' || activeTool === 'shape';
+  const isEditActive = activeTool === 'add-text' || activeTool === 'text' || activeTool === 'edit-text' || activeTool === 'shape' || activeTool === 'image' || activeTool === 'form-field';
   const isAnnotateActive = activeTool === 'highlight' || activeTool === 'draw';
   const isProtectActive = activeTool === 'whiteout' || activeTool === 'redact';
   const isMoreToolActive = isProtectActive || isAnnotateActive;
@@ -230,7 +274,7 @@ export const Header: React.FC = () => {
 
             {/* Edit Menu Popover */}
             {showEditMenu && (
-              <div className="absolute top-10 left-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-1.5 shadow-2xl z-50 w-52 animate-popover flex flex-col gap-1">
+              <div className="absolute top-10 left-0 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-1.5 shadow-2xl z-50 w-56 animate-popover flex flex-col gap-1">
                 <button
                   onClick={() => {
                     setActiveTool('add-text');
@@ -242,7 +286,7 @@ export const Header: React.FC = () => {
                       : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                   }`}
                 >
-                  <Type className="w-4 h-4 text-blue-500" />
+                  <Type className="w-4 h-4 text-blue-500 shrink-0" />
                   <div>
                     <div className="font-semibold">Add Text</div>
                     <div className="text-[10px] text-zinc-500 font-normal">Click anywhere to place text</div>
@@ -260,10 +304,42 @@ export const Header: React.FC = () => {
                       : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                   }`}
                 >
-                  <Edit3 className="w-4 h-4 text-indigo-500" />
+                  <Edit3 className="w-4 h-4 text-indigo-500 shrink-0" />
                   <div>
                     <div className="font-semibold">Edit Existing Text</div>
                     <div className="text-[10px] text-zinc-500 font-normal">Directly modify document text</div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => {
+                    imageInputRef.current?.click();
+                    setShowEditMenu(false);
+                  }}
+                  className="flex items-center gap-2.5 px-2.5 py-2 text-xs rounded-lg text-left transition-colors text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                >
+                  <ImageIcon className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <div>
+                    <div className="font-semibold">Insert Image</div>
+                    <div className="text-[10px] text-zinc-500 font-normal">PNG, JPG, WebP, SVG on canvas</div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setActiveTool('form-field');
+                    setShowEditMenu(false);
+                  }}
+                  className={`flex items-center gap-2.5 px-2.5 py-2 text-xs rounded-lg text-left transition-colors ${
+                    activeTool === 'form-field'
+                      ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-300 font-bold'
+                      : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  }`}
+                >
+                  <CheckSquare className="w-4 h-4 text-amber-500 shrink-0" />
+                  <div>
+                    <div className="font-semibold">Form Field (AcroForm)</div>
+                    <div className="text-[10px] text-zinc-500 font-normal">Text, Checkbox, Dropdowns</div>
                   </div>
                 </button>
 
@@ -820,6 +896,20 @@ export const Header: React.FC = () => {
 
                   <button
                     onClick={() => {
+                      setActiveModal('formResponses');
+                      setShowToolsMenu(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors text-left"
+                  >
+                    <FileSpreadsheet className="w-4 h-4 text-amber-500" />
+                    <div>
+                      <div className="font-semibold">Form Data (JSON / CSV)</div>
+                      <div className="text-[10px] text-zinc-500">Inspect & export responses</div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => {
                       setActiveModal('protect');
                       setShowToolsMenu(false);
                     }}
@@ -889,12 +979,19 @@ export const Header: React.FC = () => {
               {theme === 'dark' ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-zinc-700" />}
             </button>
 
-            {/* Open / Upload */}
+            {/* Open / Upload File Inputs */}
             <input
               type="file"
               ref={fileInputRef}
               onChange={handleFileUpload}
               accept=".pdf"
+              className="hidden"
+            />
+            <input
+              type="file"
+              ref={imageInputRef}
+              onChange={handleImageUpload}
+              accept="image/*"
               className="hidden"
             />
             <button

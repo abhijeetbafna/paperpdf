@@ -7,6 +7,8 @@ import type {
   DrawAnnotation, 
   ShapeAnnotation, 
   SignatureAnnotation,
+  ImageAnnotation,
+  FormFieldAnnotation,
   ExtractedTextItem
 } from '../types/pdf';
 import { 
@@ -14,6 +16,7 @@ import {
   Move, 
   Check, 
   RotateCcw,
+  RotateCw,
   Bold, 
   Italic, 
   Underline,
@@ -21,7 +24,8 @@ import {
   AlignCenter,
   AlignRight,
   Minus, 
-  Plus 
+  Plus,
+  Copy
 } from 'lucide-react';
 
 interface PageViewProps {
@@ -543,6 +547,27 @@ export const PageView: React.FC<PageViewProps> = ({ pageNumber }) => {
       };
       addAnnotation(newAnn);
       startEditingText(newAnn, true);
+    } else if (activeTool === 'form-field') {
+      const newId = `form-${Date.now()}`;
+      const newAnn: FormFieldAnnotation = {
+        id: newId,
+        type: 'form-field',
+        pageIndex,
+        fieldType: 'text',
+        name: `field_${Date.now().toString().slice(-4)}`,
+        value: '',
+        placeholder: 'Type here...',
+        domX: Math.round(clickDomX),
+        domY: Math.round(clickDomY),
+        width: 140,
+        height: 28,
+        fontSize: 12,
+        color: '#0f172a',
+        borderColor: '#3b82f6',
+        backgroundColor: '#ffffff',
+      };
+      addAnnotation(newAnn);
+      selectAnnotation(newId);
     } else if (activeTool === 'select' || activeTool === 'edit-text') {
       // Clicked on empty canvas space: cleanly commit active draft & clear selection
       commitEditDraft();
@@ -1101,6 +1126,51 @@ export const PageView: React.FC<PageViewProps> = ({ pageNumber }) => {
         onMouseDown={handlePageMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'copy';
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          const file = e.dataTransfer.files?.[0];
+          if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              const dataUrl = event.target?.result as string;
+              const img = new Image();
+              img.onload = () => {
+                const rect = pageContainerRef.current?.getBoundingClientRect();
+                const mouseX = rect ? (e.clientX - rect.left) / zoom : 50;
+                const mouseY = rect ? (e.clientY - rect.top) / zoom : 50;
+                const maxDim = 180;
+                const naturalW = img.naturalWidth || 180;
+                const naturalH = img.naturalHeight || 180;
+                const scale = Math.min(maxDim / naturalW, maxDim / naturalH, 1.0);
+                const w = Math.round(naturalW * scale);
+                const h = Math.round(naturalH * scale);
+
+                const newImageAnn: ImageAnnotation = {
+                  id: `img-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                  type: 'image',
+                  pageIndex,
+                  domX: Math.max(0, Math.round(mouseX - w / 2)),
+                  domY: Math.max(0, Math.round(mouseY - h / 2)),
+                  width: w,
+                  height: h,
+                  dataUrl,
+                  name: file.name,
+                  opacity: 1.0,
+                  rotation: 0,
+                  aspectRatioLocked: true,
+                };
+                addAnnotation(newImageAnn);
+                selectAnnotation(newImageAnn.id);
+              };
+              img.src = dataUrl;
+            };
+            reader.readAsDataURL(file);
+          }
+        }}
         style={{
           width: `${pageWidth}px`,
           height: `${pageHeight}px`,
@@ -1564,6 +1634,227 @@ export const PageView: React.FC<PageViewProps> = ({ pageNumber }) => {
                     onMouseDown={(e) => startDrag(e, 'annotation', ann.id, { domX: ann.domX, domY: ann.domY, width: ann.width, height: ann.height })}
                     className="w-full h-full object-contain pointer-events-auto select-none"
                   />
+                </div>
+              );
+            } else if (ann.type === 'image') {
+              const imageAnn = ann as ImageAnnotation;
+              const imgRotation = imageAnn.rotation || 0;
+              const imgOpacity = imageAnn.opacity !== undefined ? imageAnn.opacity : 1.0;
+
+              return (
+                <div
+                  key={ann.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    selectAnnotation(ann.id);
+                  }}
+                  style={{
+                    left: `${annLeft}px`,
+                    top: `${annTop}px`,
+                    width: `${annWidth}px`,
+                    height: `${annHeight}px`,
+                    transform: `rotate(${imgRotation}deg)`,
+                    transformOrigin: 'center center',
+                    opacity: imgOpacity,
+                  }}
+                  className={`absolute group select-none ${
+                    isSelected ? 'ring-2 ring-blue-500 rounded-sm' : 'hover:ring-1 hover:ring-blue-400/80'
+                  }`}
+                >
+                  {/* Contextual Floating Image Inspector */}
+                  {isSelected && (
+                    <div 
+                      onMouseDown={(e) => e.stopPropagation()}
+                      className="absolute -top-9 left-0 flex items-center gap-1.5 bg-zinc-900 border border-zinc-700 text-white rounded-lg px-2 py-0.5 shadow-2xl text-[11px] z-50 pointer-events-auto whitespace-nowrap"
+                    >
+                      <div
+                        onMouseDown={(e) => startDrag(e, 'annotation', ann.id, { domX: ann.domX, domY: ann.domY, width: ann.width, height: ann.height })}
+                        className="flex items-center gap-1 cursor-grab active:cursor-grabbing text-zinc-300 hover:text-white font-mono mr-1"
+                        title="Drag to reposition image"
+                      >
+                        <Move className="w-3 h-3 text-blue-400" />
+                        <span>Move</span>
+                      </div>
+
+                      <div className="w-[1px] h-3.5 bg-zinc-700" />
+
+                      {/* Opacity Slider */}
+                      <div className="flex items-center gap-1 text-[10px] text-zinc-300" title="Image Opacity (Watermark)">
+                        <span>Opacity:</span>
+                        <input
+                          type="range"
+                          min="0.1"
+                          max="1.0"
+                          step="0.05"
+                          value={imgOpacity}
+                          onChange={(e) => updateAnnotation(ann.id, { opacity: parseFloat(e.target.value) })}
+                          className="w-12 accent-blue-500 h-1 cursor-pointer"
+                        />
+                        <span className="font-mono text-[9px]">{Math.round(imgOpacity * 100)}%</span>
+                      </div>
+
+                      <div className="w-[1px] h-3.5 bg-zinc-700" />
+
+                      {/* Rotate +90 */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateAnnotation(ann.id, { rotation: (imgRotation + 90) % 360 });
+                        }}
+                        className="p-1 rounded hover:bg-zinc-800 text-zinc-300 hover:text-white"
+                        title="Rotate 90°"
+                      >
+                        <RotateCw className="w-3 h-3" />
+                      </button>
+
+                      {/* Duplicate */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const copyId = `img-${Date.now()}`;
+                          addAnnotation({
+                            ...imageAnn,
+                            id: copyId,
+                            domX: imageAnn.domX + 20,
+                            domY: imageAnn.domY + 20,
+                          });
+                          selectAnnotation(copyId);
+                        }}
+                        className="p-1 rounded hover:bg-zinc-800 text-zinc-300 hover:text-white"
+                        title="Duplicate Image"
+                      >
+                        <Copy className="w-3 h-3" />
+                      </button>
+
+                      {/* Delete */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteAnnotation(ann.id);
+                        }}
+                        className="p-1 rounded hover:bg-red-950/60 text-red-400 hover:text-red-300"
+                        title="Delete Image"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+
+                  <img
+                    src={imageAnn.dataUrl}
+                    alt={imageAnn.name || 'Image'}
+                    onMouseDown={(e) => startDrag(e, 'annotation', ann.id, { domX: ann.domX, domY: ann.domY, width: ann.width, height: ann.height })}
+                    className="w-full h-full object-contain pointer-events-auto cursor-move select-none"
+                  />
+                </div>
+              );
+            } else if (ann.type === 'form-field') {
+              const formAnn = ann as FormFieldAnnotation;
+              return (
+                <div
+                  key={ann.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    selectAnnotation(ann.id);
+                  }}
+                  style={{
+                    left: `${annLeft}px`,
+                    top: `${annTop}px`,
+                    width: `${annWidth}px`,
+                    height: `${annHeight}px`,
+                  }}
+                  className={`absolute group select-none ${
+                    isSelected ? 'ring-2 ring-blue-500 rounded' : 'hover:ring-1 hover:ring-blue-400'
+                  }`}
+                >
+                  {/* Floating Form Field Inspector */}
+                  {isSelected && (
+                    <div 
+                      onMouseDown={(e) => e.stopPropagation()}
+                      className="absolute -top-8 left-0 flex items-center gap-1.5 bg-zinc-900 border border-zinc-700 text-white rounded-lg px-2 py-0.5 shadow-2xl text-[10px] z-50 pointer-events-auto whitespace-nowrap"
+                    >
+                      <div
+                        onMouseDown={(e) => startDrag(e, 'annotation', ann.id, { domX: ann.domX, domY: ann.domY, width: ann.width, height: ann.height })}
+                        className="flex items-center gap-1 cursor-grab active:cursor-grabbing text-zinc-300 hover:text-white font-mono mr-1"
+                      >
+                        <Move className="w-3 h-3 text-blue-400" />
+                        <span>Field</span>
+                      </div>
+
+                      <div className="w-[1px] h-3 bg-zinc-700" />
+
+                      <input
+                        type="text"
+                        value={formAnn.name}
+                        onChange={(e) => updateAnnotation(ann.id, { name: e.target.value })}
+                        placeholder="Name"
+                        className="bg-zinc-800 border border-zinc-700 rounded px-1.5 py-0.5 text-[10px] text-white w-16 focus:outline-none"
+                      />
+
+                      <select
+                        value={formAnn.fieldType}
+                        onChange={(e) => updateAnnotation(ann.id, { fieldType: e.target.value as any })}
+                        className="bg-zinc-800 border border-zinc-700 rounded px-1 py-0.5 text-[10px] text-zinc-300 focus:outline-none"
+                      >
+                        <option value="text">Text</option>
+                        <option value="checkbox">Checkbox</option>
+                        <option value="dropdown">Dropdown</option>
+                      </select>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteAnnotation(ann.id);
+                        }}
+                        className="text-red-400 hover:text-red-300 ml-1"
+                        title="Delete Form Field"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Field Render by Type */}
+                  {formAnn.fieldType === 'text' && (
+                    <input
+                      type="text"
+                      value={String(formAnn.value || '')}
+                      onChange={(e) => updateAnnotation(ann.id, { value: e.target.value })}
+                      placeholder={formAnn.placeholder || 'Type here...'}
+                      style={{
+                        fontSize: `${(formAnn.fontSize || 12) * zoom}px`,
+                        color: formAnn.color || '#0f172a',
+                        borderColor: formAnn.borderColor || '#93c5fd',
+                      }}
+                      className="w-full h-full px-1.5 bg-blue-50/40 dark:bg-blue-950/30 border rounded border-dashed focus:border-solid focus:bg-white dark:focus:bg-zinc-900 focus:outline-none transition-all font-sans"
+                    />
+                  )}
+
+                  {formAnn.fieldType === 'checkbox' && (
+                    <label className="w-full h-full flex items-center justify-center cursor-pointer bg-blue-50/40 dark:bg-blue-950/30 border border-dashed border-blue-400 rounded">
+                      <input
+                        type="checkbox"
+                        checked={formAnn.value === true || formAnn.value === 'true'}
+                        onChange={(e) => updateAnnotation(ann.id, { value: e.target.checked })}
+                        className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600"
+                      />
+                    </label>
+                  )}
+
+                  {formAnn.fieldType === 'dropdown' && (
+                    <select
+                      value={String(formAnn.value || '')}
+                      onChange={(e) => updateAnnotation(ann.id, { value: e.target.value })}
+                      style={{
+                        fontSize: `${(formAnn.fontSize || 11) * zoom}px`,
+                      }}
+                      className="w-full h-full px-1 bg-blue-50/40 dark:bg-blue-950/30 border border-blue-400 border-dashed rounded focus:border-solid focus:bg-white dark:focus:bg-zinc-900 focus:outline-none text-xs"
+                    >
+                      {(formAnn.options || ['Option 1', 'Option 2', 'Option 3']).map((opt, i) => (
+                        <option key={i} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               );
             } else if (ann.type === 'shape') {

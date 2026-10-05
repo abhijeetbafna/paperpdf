@@ -3,6 +3,8 @@ export type ToolMode =
   | 'edit-text' 
   | 'add-text' 
   | 'text'
+  | 'image'
+  | 'form-field'
   | 'whiteout' 
   | 'redact' 
   | 'highlight' 
@@ -128,13 +130,51 @@ export interface SignatureAnnotation {
   dataUrl: string;
 }
 
+export interface ImageAnnotation {
+  id: string;
+  type: 'image';
+  pageIndex: number;
+  domX: number;
+  domY: number;
+  width: number;
+  height: number;
+  dataUrl: string;
+  name?: string;
+  opacity: number; // 0.1 to 1.0
+  rotation: number; // 0 to 360 deg
+  aspectRatioLocked?: boolean;
+}
+
+export interface FormFieldAnnotation {
+  id: string;
+  type: 'form-field';
+  pageIndex: number;
+  fieldType: 'text' | 'checkbox' | 'radio' | 'dropdown' | 'date';
+  name: string;
+  value: string | boolean;
+  placeholder?: string;
+  options?: string[]; // for dropdown / radio
+  required?: boolean;
+  readOnly?: boolean;
+  domX: number;
+  domY: number;
+  width: number;
+  height: number;
+  fontSize: number;
+  color: string;
+  backgroundColor?: string;
+  borderColor?: string;
+}
+
 export type AnnotationItem = 
   | TextAnnotation 
   | RectAnnotation 
   | FreehandHighlightAnnotation 
   | DrawAnnotation
   | ShapeAnnotation
-  | SignatureAnnotation;
+  | SignatureAnnotation
+  | ImageAnnotation
+  | FormFieldAnnotation;
 
 export interface HistoryState {
   textModifications: Record<string, ExtractedTextItem>;
