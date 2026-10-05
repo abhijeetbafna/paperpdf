@@ -21,6 +21,36 @@ export const Workspace: React.FC = () => {
   const isScrollingProgrammatically = useRef(false);
 
   const activePages = pageDimensions.filter(p => !deletedPages.includes(p.pageNumber - 1));
+  const [, setViewportTick] = React.useState(0);
+
+  // Dynamic Browser Zoom & Viewport Listener (Auto adapts when browser zoom changes 80%-200%)
+  useEffect(() => {
+    const handleViewportChange = () => {
+      setViewportTick(prev => (prev + 1) % 1000);
+    };
+
+    window.addEventListener('resize', handleViewportChange);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportChange);
+    }
+
+    // Media query listener for devicePixelRatio / browser zoom transitions
+    const mediaQuery = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+    const handleMediaChange = () => handleViewportChange();
+    try {
+      mediaQuery.addEventListener('change', handleMediaChange);
+    } catch {}
+
+    return () => {
+      window.removeEventListener('resize', handleViewportChange);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleViewportChange);
+      }
+      try {
+        mediaQuery.removeEventListener('change', handleMediaChange);
+      } catch {}
+    };
+  }, []);
 
   // 1. Two-way synchronization: Scroll canvas when currentPage changes (e.g. from sidebar click)
   useEffect(() => {

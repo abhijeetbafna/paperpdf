@@ -857,7 +857,7 @@ export const PageView: React.FC<PageViewProps> = ({ pageNumber }) => {
   };
 
   // =========================================================================
-  // The Authoritative Contextual Rich Text Toolbar (Never Clipped Overlay)
+  // The Authoritative Contextual Rich Text Toolbar (Theme-Aware & Compact)
   // =========================================================================
   const renderRichTextToolbar = (
     itemData: TextEditDraft,
@@ -872,8 +872,8 @@ export const PageView: React.FC<PageViewProps> = ({ pageNumber }) => {
     const itemWidth = (itemData.width || 80) * zoom;
     const itemHeight = (itemData.height || 20) * zoom;
 
-    // Approximate rendered toolbar dimensions
-    const toolbarWidth = 510;
+    // Compact toolbar dimensions (~340px)
+    const toolbarWidth = 345;
     const toolbarHeight = 36;
 
     // Horizontally center over text element, clamped securely inside [10, pageWidth - toolbarWidth - 10]
@@ -881,12 +881,12 @@ export const PageView: React.FC<PageViewProps> = ({ pageNumber }) => {
     const clampedLeft = Math.max(10, Math.min(pageWidth - toolbarWidth - 10, idealLeft));
 
     // Vertically: if enough room above, place above; otherwise place below
-    const hasSpaceAbove = itemTop >= (toolbarHeight + 14);
+    const hasSpaceAbove = itemTop >= (toolbarHeight + 12);
     const clampedTop = hasSpaceAbove 
-      ? Math.max(6, itemTop - toolbarHeight - 8)
-      : Math.min(pageHeight - toolbarHeight - 6, itemTop + itemHeight + 8);
+      ? Math.max(6, itemTop - toolbarHeight - 6)
+      : Math.min(pageHeight - toolbarHeight - 6, itemTop + itemHeight + 6);
 
-    const colors = ['#000000', '#374151', '#2563eb', '#dc2626', '#16a34a', '#d97706', '#7c3aed', '#ffffff'];
+    const colors = ['#000000', '#2563eb', '#dc2626', '#16a34a', '#ffffff'];
     const cleanFontName = itemData.fontName ? itemData.fontName.replace(/^[A-Z]{6}\+/, '') : undefined;
 
     return (
@@ -896,10 +896,8 @@ export const PageView: React.FC<PageViewProps> = ({ pageNumber }) => {
           position: 'absolute',
           left: `${clampedLeft}px`,
           top: `${clampedTop}px`,
-          width: 'max-content',
-          maxWidth: `calc(100% - 20px)`,
         }}
-        className="pointer-events-auto flex items-center gap-1 bg-zinc-900/95 backdrop-blur-md border border-zinc-700 text-white rounded-lg px-2.5 py-1.5 shadow-2xl text-[11px] font-sans z-50 select-none animate-fade-in"
+        className="pointer-events-auto flex items-center gap-1 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 rounded-lg px-2 py-1 shadow-2xl text-[11px] font-sans z-50 select-none animate-fade-in w-max flex-nowrap shrink-0"
       >
         {/* Drag / Move Handle */}
         <div
@@ -914,20 +912,20 @@ export const PageView: React.FC<PageViewProps> = ({ pageNumber }) => {
               height: itemData.height || 20
             }
           )}
-          className="flex items-center gap-1 p-1 hover:bg-zinc-800 rounded cursor-grab active:cursor-grabbing text-zinc-300 hover:text-white"
-          title="Drag to reposition text with alignment guides"
+          className="flex items-center gap-0.5 p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded cursor-grab active:cursor-grabbing text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white shrink-0"
+          title="Drag to reposition text"
         >
           <Move className="w-3.5 h-3.5" />
-          <span className="text-[10px] font-mono font-medium">Move</span>
+          <span className="text-[10px] font-mono font-medium hidden sm:inline">Move</span>
         </div>
 
-        <div className="w-[1px] h-3.5 bg-zinc-700 mx-0.5" />
+        <div className="w-[1px] h-3.5 bg-zinc-200 dark:bg-zinc-700 mx-0.5 shrink-0" />
 
         {/* Font Family Selector */}
         <select
           value={itemData.fontFamily || 'Helvetica'}
           onChange={(e) => onUpdate({ fontFamily: e.target.value })}
-          className="bg-zinc-800 text-white text-[10px] rounded px-1.5 py-0.5 border border-zinc-700 outline-none cursor-pointer font-medium max-w-[130px] truncate"
+          className="bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-[10px] rounded px-1.5 py-0.5 border border-zinc-300 dark:border-zinc-700 outline-none cursor-pointer font-medium max-w-[105px] truncate shrink-0"
         >
           {cleanFontName && (
             <option value={itemData.fontFamily}>Original ({cleanFontName})</option>
@@ -938,143 +936,148 @@ export const PageView: React.FC<PageViewProps> = ({ pageNumber }) => {
         </select>
 
         {/* Font Size Steppers */}
-        <div className="flex items-center bg-zinc-800 rounded border border-zinc-700 px-0.5">
+        <div className="flex items-center bg-zinc-100 dark:bg-zinc-800 rounded border border-zinc-300 dark:border-zinc-700 px-0.5 shrink-0">
           <button
             onClick={() => onUpdate({ fontSize: Math.max(6, Math.round(itemData.fontSize - 1)) })}
-            className="px-1 py-0.5 hover:bg-zinc-700 rounded text-zinc-300"
+            className="px-1 py-0.5 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded text-zinc-600 dark:text-zinc-300"
             title="Decrease size"
           >
             <Minus className="w-2.5 h-2.5" />
           </button>
-          <span className="font-mono text-[10px] px-1 font-bold min-w-[20px] text-center">
+          <span className="font-mono text-[10px] px-1 font-bold min-w-[18px] text-center text-zinc-800 dark:text-zinc-200">
             {Math.round(itemData.fontSize)}
           </span>
           <button
             onClick={() => onUpdate({ fontSize: Math.min(72, Math.round(itemData.fontSize + 1)) })}
-            className="px-1 py-0.5 hover:bg-zinc-700 rounded text-zinc-300"
+            className="px-1 py-0.5 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded text-zinc-600 dark:text-zinc-300"
             title="Increase size"
           >
             <Plus className="w-2.5 h-2.5" />
           </button>
         </div>
 
-        {/* Bold */}
-        <button
-          onClick={() => onUpdate({ isBold: !itemData.isBold })}
-          className={`p-1 rounded transition-colors ${itemData.isBold ? 'bg-blue-600 text-white' : 'hover:bg-zinc-800 text-zinc-300'}`}
-          title="Bold (Ctrl+B)"
-        >
-          <Bold className="w-3 h-3" />
-        </button>
+        {/* Bold, Italic, Underline */}
+        <div className="flex items-center gap-0.5 shrink-0">
+          <button
+            onClick={() => onUpdate({ isBold: !itemData.isBold })}
+            className={`p-1 rounded transition-colors ${itemData.isBold ? 'bg-blue-600 text-white' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white'}`}
+            title="Bold (Ctrl+B)"
+            aria-label="Bold"
+          >
+            <Bold className="w-3 h-3" />
+          </button>
+          <button
+            onClick={() => onUpdate({ isItalic: !itemData.isItalic })}
+            className={`p-1 rounded transition-colors ${itemData.isItalic ? 'bg-blue-600 text-white' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white'}`}
+            title="Italic (Ctrl+I)"
+            aria-label="Italic"
+          >
+            <Italic className="w-3 h-3" />
+          </button>
+          <button
+            onClick={() => onUpdate({ isUnderline: !itemData.isUnderline })}
+            className={`p-1 rounded transition-colors ${itemData.isUnderline ? 'bg-blue-600 text-white' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white'}`}
+            title="Underline (Ctrl+U)"
+            aria-label="Underline"
+          >
+            <Underline className="w-3 h-3" />
+          </button>
+        </div>
 
-        {/* Italic */}
-        <button
-          onClick={() => onUpdate({ isItalic: !itemData.isItalic })}
-          className={`p-1 rounded transition-colors ${itemData.isItalic ? 'bg-blue-600 text-white' : 'hover:bg-zinc-800 text-zinc-300'}`}
-          title="Italic (Ctrl+I)"
-        >
-          <Italic className="w-3 h-3" />
-        </button>
-
-        {/* Underline */}
-        <button
-          onClick={() => onUpdate({ isUnderline: !itemData.isUnderline })}
-          className={`p-1 rounded transition-colors ${itemData.isUnderline ? 'bg-blue-600 text-white' : 'hover:bg-zinc-800 text-zinc-300'}`}
-          title="Underline (Ctrl+U)"
-        >
-          <Underline className="w-3 h-3" />
-        </button>
-
-        <div className="w-[1px] h-3.5 bg-zinc-700 mx-0.5" />
+        <div className="w-[1px] h-3.5 bg-zinc-200 dark:bg-zinc-700 mx-0.5 shrink-0" />
 
         {/* Text Alignment */}
-        <div className="flex items-center gap-0.5 bg-zinc-800 rounded p-0.5 border border-zinc-700">
+        <div className="flex items-center gap-0.5 bg-zinc-100 dark:bg-zinc-800 rounded p-0.5 border border-zinc-300 dark:border-zinc-700 shrink-0">
           <button
             onClick={() => onUpdate({ align: 'left' })}
-            className={`p-0.5 rounded ${itemData.align === 'left' || !itemData.align ? 'bg-blue-600 text-white' : 'text-zinc-400 hover:text-white'}`}
+            className={`p-0.5 rounded ${itemData.align === 'left' || !itemData.align ? 'bg-blue-600 text-white' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}
             title="Align Left"
+            aria-label="Align Left"
           >
             <AlignLeft className="w-2.5 h-2.5" />
           </button>
           <button
             onClick={() => onUpdate({ align: 'center' })}
-            className={`p-0.5 rounded ${itemData.align === 'center' ? 'bg-blue-600 text-white' : 'text-zinc-400 hover:text-white'}`}
+            className={`p-0.5 rounded ${itemData.align === 'center' ? 'bg-blue-600 text-white' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}
             title="Align Center"
+            aria-label="Align Center"
           >
             <AlignCenter className="w-2.5 h-2.5" />
           </button>
           <button
             onClick={() => onUpdate({ align: 'right' })}
-            className={`p-0.5 rounded ${itemData.align === 'right' ? 'bg-blue-600 text-white' : 'text-zinc-400 hover:text-white'}`}
+            className={`p-0.5 rounded ${itemData.align === 'right' ? 'bg-blue-600 text-white' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}
             title="Align Right"
+            aria-label="Align Right"
           >
             <AlignRight className="w-2.5 h-2.5" />
           </button>
         </div>
 
         {/* Color Palette Dots */}
-        <div className="flex items-center gap-1 px-1">
+        <div className="flex items-center gap-1 px-0.5 shrink-0">
           {colors.map((c) => (
             <button
               key={c}
               onClick={() => onUpdate({ color: c })}
               style={{ backgroundColor: c }}
-              className={`w-3.5 h-3.5 rounded-full border border-zinc-600 transition-transform ${
-                (itemData.color || '#000000') === c ? 'scale-125 ring-1.5 ring-blue-400' : 'hover:scale-110'
+              className={`w-3 h-3 rounded-full border border-zinc-400 dark:border-zinc-600 transition-transform ${
+                (itemData.color || '#000000') === c ? 'scale-125 ring-1.5 ring-blue-500' : 'hover:scale-110'
               }`}
               title={`Color ${c}`}
             />
           ))}
           {/* Custom Hex Color Picker */}
-          <label className="w-3.5 h-3.5 rounded-full border border-dashed border-zinc-400 flex items-center justify-center cursor-pointer relative overflow-hidden" title="Custom Color">
+          <label className="w-3 h-3 rounded-full border border-dashed border-zinc-400 dark:border-zinc-500 flex items-center justify-center cursor-pointer relative overflow-hidden shrink-0" title="Custom Color">
             <input
               type="color"
               value={itemData.color || '#000000'}
               onChange={(e) => onUpdate({ color: e.target.value })}
               className="opacity-0 absolute inset-0 cursor-pointer"
             />
-            <span className="text-[8px] font-bold text-zinc-400 leading-none">+</span>
+            <span className="text-[7px] font-bold text-zinc-500 dark:text-zinc-400 leading-none">+</span>
           </label>
         </div>
 
-        <div className="w-[1px] h-3.5 bg-zinc-700 mx-0.5" />
+        <div className="w-[1px] h-3.5 bg-zinc-200 dark:bg-zinc-700 mx-0.5 shrink-0" />
 
-        {/* Done / Save Button */}
+        {/* Done / Commit Icon Button */}
         <button
           onClick={(e) => {
             e.stopPropagation();
             onDone();
           }}
-          className="flex items-center gap-0.5 px-2 py-0.5 bg-blue-600 hover:bg-blue-500 rounded text-white font-medium text-[10px] shadow-sm active:scale-95 transition-transform"
-          title="Save & Done (Ctrl+Enter)"
+          className="flex items-center justify-center w-6 h-6 bg-blue-600 hover:bg-blue-500 rounded text-white shadow-sm transition-transform active:scale-90 shrink-0"
+          title="Done / Save changes (Ctrl+Enter)"
+          aria-label="Done"
         >
-          <Check className="w-3 h-3" />
-          <span>Done</span>
+          <Check className="w-3.5 h-3.5 stroke-[2.5]" />
         </button>
 
-        {/* Discard / Revert Button */}
+        {/* Discard / Revert Icon Button */}
         <button
           onClick={(e) => {
             e.stopPropagation();
             onDiscard();
           }}
-          className="flex items-center gap-0.5 px-1.5 py-0.5 bg-zinc-800 hover:bg-zinc-700 rounded text-zinc-300 hover:text-white font-medium text-[10px] border border-zinc-700 active:scale-95 transition-transform"
+          className="flex items-center justify-center w-6 h-6 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white border border-zinc-300 dark:border-zinc-700 transition-transform active:scale-90 shrink-0"
           title="Discard changes (Escape)"
+          aria-label="Discard changes"
         >
-          <RotateCcw className="w-2.5 h-2.5" />
-          <span>Discard</span>
+          <RotateCcw className="w-3 h-3" />
         </button>
 
-        {/* Delete Button */}
+        {/* Delete Icon Button */}
         <button
           onClick={(e) => {
             e.stopPropagation();
             onDelete();
           }}
-          className="p-1 hover:bg-red-950/60 rounded text-red-400 hover:text-red-300 transition-colors ml-0.5"
-          title="Delete text element"
+          className="flex items-center justify-center w-6 h-6 hover:bg-red-100 dark:hover:bg-red-950/60 rounded text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors shrink-0"
+          title="Delete text element (Delete)"
+          aria-label="Delete text element"
         >
-          <Trash2 className="w-3 h-3" />
+          <Trash2 className="w-3.5 h-3.5" />
         </button>
       </div>
     );
