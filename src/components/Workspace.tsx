@@ -56,9 +56,13 @@ export const Workspace: React.FC = () => {
   useEffect(() => {
     if (!currentPage || isScrollingProgrammatically.current) return;
     const targetPage = document.getElementById(`pdf-page-${currentPage}`);
-    if (targetPage && mainContainerRef.current) {
+    const container = mainContainerRef.current;
+    if (targetPage && container) {
       isScrollingProgrammatically.current = true;
-      targetPage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const containerRect = container.getBoundingClientRect();
+      const targetRect = targetPage.getBoundingClientRect();
+      const scrollOffset = targetRect.top - containerRect.top + container.scrollTop - 20;
+      container.scrollTo({ top: Math.max(0, scrollOffset), behavior: 'smooth' });
       const timer = setTimeout(() => {
         isScrollingProgrammatically.current = false;
       }, 700);

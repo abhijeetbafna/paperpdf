@@ -67,7 +67,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
           return (
             <div
               key={page.pageNumber}
-              onClick={() => setCurrentPage(page.pageNumber)}
+              onClick={() => {
+                setCurrentPage(page.pageNumber);
+                const targetPage = document.getElementById(`pdf-page-${page.pageNumber}`);
+                if (targetPage) {
+                  targetPage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              }}
               className={`group relative p-1.5 rounded-lg border transition-all cursor-pointer ${
                 isCurrent
                   ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30 shadow-md ring-2 ring-blue-500/30'
