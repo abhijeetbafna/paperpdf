@@ -19,7 +19,7 @@ export interface DiffResult {
 }
 
 /**
- * Basic Myers diff / Longest Common Subsequence algorithm on word tokens
+ * Myers diff / Longest Common Subsequence algorithm on word tokens
  */
 export function computeWordDiff(textA: string, textB: string): { diffs: DiffWord[]; similarity: number; added: number; removed: number; unchanged: number } {
   const wordsA = textA.split(/\s+/).filter(w => w.length > 0);
@@ -29,15 +29,23 @@ export function computeWordDiff(textA: string, textB: string): { diffs: DiffWord
   const m = wordsB.length;
 
   if (n === 0 && m === 0) {
-    return { diffs: [], similarity: 100, added: 0, removed: 0, unchanged: 0 };
+    return { diffs: [{ type: 'unchanged', text: 'Documents are visually identical with no text content.' }], similarity: 100, added: 0, removed: 0, unchanged: 0 };
   }
 
-  // DP table for LCS
-  const dp: number[][] = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+  // Cap words if very large to prevent polynomial lockups
+  const maxTokens = 2500;
+  const safeA = wordsA.slice(0, maxTokens);
+  const safeB = wordsB.slice(0, maxTokens);
 
-  for (let i = 0; i < n; i++) {
-    for (let j = 0; j < m; j++) {
-      if (wordsA[i] === wordsB[j]) {
+  const lenA = safeA.length;
+  const lenB = safeB.length;
+
+  // DP table for LCS
+  const dp: number[][] = Array.from({ length: lenA + 1 }, () => new Array(lenB + 1).fill(0));
+
+  for (let i = 0; i < lenA; i++) {
+    for (let j = 0; j < lenB; j++) {
+      if (safeA[i] === safeB[j]) {
         dp[i + 1][j + 1] = dp[i][j] + 1;
       } else {
         dp[i + 1][j + 1] = Math.max(dp[i + 1][j], dp[i][j + 1]);
@@ -47,30 +55,30 @@ export function computeWordDiff(textA: string, textB: string): { diffs: DiffWord
 
   // Backtrack to build diffs
   const diffs: DiffWord[] = [];
-  let i = n;
-  let j = m;
+  let i = lenA;
+  let j = lenB;
   let added = 0;
   let removed = 0;
   let unchanged = 0;
 
   while (i > 0 || j > 0) {
-    if (i > 0 && j > 0 && wordsA[i - 1] === wordsB[j - 1]) {
-      diffs.unshift({ type: 'unchanged', text: wordsA[i - 1] });
+    if (i > 0 && j > 0 && safeA[i - 1] === safeB[j - 1]) {
+      diffs.unshift({ type: 'unchanged', text: safeA[i - 1] });
       unchanged++;
       i--;
       j--;
     } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
-      diffs.unshift({ type: 'added', text: wordsB[j - 1] });
+      diffs.unshift({ type: 'added', text: safeB[j - 1] });
       added++;
       j--;
     } else if (i > 0 && (j === 0 || dp[i][j - 1] < dp[i - 1][j])) {
-      diffs.unshift({ type: 'removed', text: wordsA[i - 1] });
+      diffs.unshift({ type: 'removed', text: safeA[i - 1] });
       removed++;
       i--;
     }
   }
 
-  const totalTokens = Math.max(n, m);
+  const totalTokens = Math.max(lenA, lenB);
   const similarity = totalTokens > 0 ? Math.round((unchanged / totalTokens) * 1000) / 10 : 100;
 
   return { diffs, similarity, added, removed, unchanged };
@@ -79,28 +87,39 @@ export function computeWordDiff(textA: string, textB: string): { diffs: DiffWord
 /**
  * Render a specific page of a PDF document to an HTMLCanvasElement
  */
-export async function renderPdfPageToCanvas(pdfDoc: pdfjsLib.PDFDocumentProxy, pageNumber: number, scale = 1.5): Promise<{ canvas: HTMLCanvasElement; text: string }> {
-  const page = await pdfDoc.getPage(pageNumber);
+export async function renderPdfPageToCanvas(pdfDoc: pdfjsLib.PDFDocumentProxy, pageNumber: number, scale = 1.3): Promise<{ canvas: HTMLCanvasElement; text: string }> {
+  const safePageNum = Math.max(1, Math.min(pdfDoc.numPages, pageNumber));
+  const page = await pdfDoc.getPage(safePageNum);
   const viewport = page.getViewport({ scale });
 
   const canvas = document.createElement('canvas');
-  canvas.width = viewport.width;
-  canvas.height = viewport.height;
+  canvas.width = Math.floor(viewport.width);
+  canvas.height = Math.floor(viewport.height);
   const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('Could not get 2d canvas context');
+  if (!ctx) throw new Error('Could not get 2D canvas context');
+
+  // Fill white background first
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // Render visual page
-  await page.render({
+  const renderTask = page.render({
     canvasContext: ctx,
-    viewport,
+    viewport: viewport,
     canvas: canvas as any,
-  } as any).promise;
+  } as any);
+  await renderTask.promise;
 
   // Extract text
-  const textContent = await page.getTextContent();
-  const text = textContent.items
-    .map((item: any) => item.str || '')
-    .join(' ');
+  let text = '';
+  try {
+    const textContent = await page.getTextContent();
+    text = textContent.items
+      .map((item: any) => item.str || '')
+      .join(' ');
+  } catch (err) {
+    console.warn('Could not extract text for redline:', err);
+  }
 
   return { canvas, text };
 }
@@ -187,7 +206,7 @@ export async function comparePdfPages(
       pD[i] = lumA;
       pD[i + 1] = lumA;
       pD[i + 2] = lumA;
-      pD[i + 3] = 40;
+      pD[i + 3] = 35;
     }
   }
 

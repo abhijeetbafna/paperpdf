@@ -14,7 +14,8 @@ import {
   ChevronRight, 
   Sparkles,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
 
 export const PdfDiffModal: React.FC = () => {
@@ -35,6 +36,7 @@ export const PdfDiffModal: React.FC = () => {
   const [sliderPosition, setSliderPosition] = useState(50); // percentage 0 - 100
   const [isComparing, setIsComparing] = useState(false);
   const [diffResult, setDiffResult] = useState<DiffResult | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const sliderContainerRef = useRef<HTMLDivElement>(null);
   const isDraggingSlider = useRef(false);
@@ -42,7 +44,7 @@ export const PdfDiffModal: React.FC = () => {
   // Initialize Doc A with active document
   useEffect(() => {
     if (activeModal === 'pdfDiff' && documentBytes) {
-      setDocABytes(documentBytes);
+      setDocABytes(documentBytes.slice());
       setDocAName(fileName || 'Original Document.pdf');
     }
   }, [activeModal, documentBytes, fileName]);
@@ -55,23 +57,28 @@ export const PdfDiffModal: React.FC = () => {
       if (!docABytes) return;
 
       try {
-        const loadingTaskA = pdfjsLib.getDocument({ data: docABytes });
+        setErrorMessage(null);
+        const loadingTaskA = pdfjsLib.getDocument({ data: docABytes.slice() });
         const docA = await loadingTaskA.promise;
         if (!isMounted) return;
         setPdfDocA(docA);
 
         if (docBBytes) {
-          const loadingTaskB = pdfjsLib.getDocument({ data: docBBytes });
+          const loadingTaskB = pdfjsLib.getDocument({ data: docBBytes.slice() });
           const docB = await loadingTaskB.promise;
           if (!isMounted) return;
           setPdfDocB(docB);
-          setMaxPages(Math.min(docA.numPages, docB.numPages));
+          const pages = Math.min(docA.numPages, docB.numPages);
+          setMaxPages(pages > 0 ? pages : 1);
+          setCurrentPage(prev => Math.max(1, Math.min(prev, pages > 0 ? pages : 1)));
         } else {
           setPdfDocB(null);
-          setMaxPages(docA.numPages);
+          setMaxPages(docA.numPages || 1);
+          setCurrentPage(1);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error loading PDF documents for diff:', err);
+        if (isMounted) setErrorMessage(err?.message || 'Failed to load PDF documents for comparison.');
       }
     }
 
@@ -93,13 +100,16 @@ export const PdfDiffModal: React.FC = () => {
       }
 
       setIsComparing(true);
+      setErrorMessage(null);
       try {
-        const result = await comparePdfPages(pdfDocA, currentPage, pdfDocB, currentPage);
+        const safePage = Math.max(1, Math.min(currentPage, Math.min(pdfDocA.numPages, pdfDocB.numPages)));
+        const result = await comparePdfPages(pdfDocA, safePage, pdfDocB, safePage);
         if (isMounted) {
           setDiffResult(result);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Diff computation error:', err);
+        if (isMounted) setErrorMessage(err?.message || 'Error computing visual diff.');
       } finally {
         if (isMounted) setIsComparing(false);
       }
@@ -163,7 +173,7 @@ export const PdfDiffModal: React.FC = () => {
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto select-none"
       onMouseMove={handleSliderMouseMove}
       onMouseUp={handleSliderMouseUp}
     >
@@ -201,10 +211,10 @@ export const PdfDiffModal: React.FC = () => {
           {/* Document Pills */}
           <div className="flex items-center gap-2 flex-wrap">
             {/* Doc A */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg text-xs">
-              <span className="w-2 h-2 rounded-full bg-red-500" />
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg text-xs shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
               <span className="font-semibold text-zinc-500">A (Original):</span>
-              <span className="font-medium text-zinc-800 dark:text-zinc-200 max-w-[120px] truncate" title={docAName}>{docAName}</span>
+              <span className="font-medium text-zinc-800 dark:text-zinc-200 max-w-[130px] truncate" title={docAName}>{docAName}</span>
               <label className="cursor-pointer text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline ml-1">
                 Change
                 <input type="file" accept=".pdf" onChange={handleUploadA} className="hidden" />
@@ -215,10 +225,10 @@ export const PdfDiffModal: React.FC = () => {
 
             {/* Doc B */}
             {docBBytes ? (
-              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg text-xs">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg text-xs shadow-sm">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
                 <span className="font-semibold text-zinc-500">B (Revision):</span>
-                <span className="font-medium text-zinc-800 dark:text-zinc-200 max-w-[120px] truncate" title={docBName}>{docBName}</span>
+                <span className="font-medium text-zinc-800 dark:text-zinc-200 max-w-[130px] truncate" title={docBName}>{docBName}</span>
                 <label className="cursor-pointer text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline ml-1">
                   Change
                   <input type="file" accept=".pdf" onChange={handleUploadB} className="hidden" />
@@ -227,7 +237,7 @@ export const PdfDiffModal: React.FC = () => {
             ) : (
               <label className="flex items-center gap-1.5 px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold cursor-pointer transition-colors shadow-sm">
                 <Upload className="w-3.5 h-3.5" />
-                <span>Upload Document B to Compare</span>
+                <span>Upload Document B (.pdf)</span>
                 <input type="file" accept=".pdf" onChange={handleUploadB} className="hidden" />
               </label>
             )}
@@ -288,10 +298,10 @@ export const PdfDiffModal: React.FC = () => {
 
               {/* Page Navigator */}
               {maxPages > 1 && (
-                <div className="flex items-center gap-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 px-2 py-1 rounded-lg text-xs">
+                <div className="flex items-center gap-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 px-2 py-1 rounded-lg text-xs shadow-sm">
                   <button
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
+                    disabled={currentPage <= 1}
                     className="p-0.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 disabled:opacity-30"
                   >
                     <ChevronLeft className="w-3.5 h-3.5" />
@@ -299,7 +309,7 @@ export const PdfDiffModal: React.FC = () => {
                   <span className="font-mono font-medium">Page {currentPage} of {maxPages}</span>
                   <button
                     onClick={() => setCurrentPage(p => Math.min(maxPages, p + 1))}
-                    disabled={currentPage === maxPages}
+                    disabled={currentPage >= maxPages}
                     className="p-0.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 disabled:opacity-30"
                   >
                     <ChevronRight className="w-3.5 h-3.5" />
@@ -313,7 +323,7 @@ export const PdfDiffModal: React.FC = () => {
         {/* Main Content Area */}
         <div className="flex-1 p-6 overflow-y-auto min-h-[420px] bg-zinc-100/60 dark:bg-zinc-950/60 flex flex-col items-center justify-center">
           {!docBBytes ? (
-            <div className="text-center max-w-md p-8 border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-2xl bg-white dark:bg-zinc-900">
+            <div className="text-center max-w-md p-8 border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-2xl bg-white dark:bg-zinc-900 shadow-sm">
               <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto mb-4">
                 <GitCompare className="w-7 h-7" />
               </div>
@@ -330,7 +340,20 @@ export const PdfDiffModal: React.FC = () => {
           ) : isComparing ? (
             <div className="flex flex-col items-center gap-3">
               <div className="w-8 h-8 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-              <p className="text-xs font-medium text-zinc-500">Analyzing visual matrices & token diffs...</p>
+              <p className="text-xs font-medium text-zinc-600 dark:text-zinc-300">Rendering pages and computing difference matrix...</p>
+            </div>
+          ) : errorMessage ? (
+            <div className="text-center max-w-md p-6 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-2xl">
+              <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
+              <h4 className="text-sm font-bold text-red-700 dark:text-red-300 mb-1">Comparison Failed</h4>
+              <p className="text-xs text-red-600 dark:text-red-400 mb-4">{errorMessage}</p>
+              <button
+                onClick={() => setCurrentPage(1)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-semibold hover:bg-red-500 transition-colors"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Retry Comparison</span>
+              </button>
             </div>
           ) : diffResult ? (
             <div className="w-full flex flex-col items-center gap-4">
@@ -365,13 +388,17 @@ export const PdfDiffModal: React.FC = () => {
               {viewMode === 'slider' && (
                 <div 
                   ref={sliderContainerRef}
-                  className="relative max-w-3xl w-full bg-white dark:bg-zinc-900 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden select-none cursor-ew-resize"
+                  className="relative max-w-2xl w-full bg-white dark:bg-zinc-900 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden select-none cursor-ew-resize flex items-center justify-center"
                   onMouseDown={handleSliderMouseDown}
                 >
-                  {/* Layer B (Full bottom) */}
-                  <img src={diffResult.canvasBUrl} alt="Revision B" className="w-full h-auto block" />
+                  {/* Layer B (Revision) */}
+                  <img 
+                    src={diffResult.canvasBUrl} 
+                    alt="Revision B" 
+                    className="w-full h-auto max-h-[62vh] object-contain block pointer-events-none" 
+                  />
 
-                  {/* Layer A (Clipped top) */}
+                  {/* Layer A (Original Clipped) */}
                   <div 
                     className="absolute inset-0 overflow-hidden border-r-2 border-indigo-500 pointer-events-none"
                     style={{ width: `${sliderPosition}%` }}
@@ -379,7 +406,7 @@ export const PdfDiffModal: React.FC = () => {
                     <img 
                       src={diffResult.canvasAUrl} 
                       alt="Original A" 
-                      className="h-full max-w-none block" 
+                      className="max-w-none h-full block pointer-events-none" 
                       style={{ width: sliderContainerRef.current?.clientWidth || '100%' }}
                     />
                   </div>
@@ -412,7 +439,7 @@ export const PdfDiffModal: React.FC = () => {
                       <span className="w-2 h-2 rounded-full bg-red-500" />
                       Original (A) — {docAName}
                     </div>
-                    <img src={diffResult.canvasAUrl} alt="Original A" className="w-full h-auto rounded border border-zinc-200 dark:border-zinc-800 shadow-sm" />
+                    <img src={diffResult.canvasAUrl} alt="Original A" className="w-full h-auto max-h-[58vh] object-contain rounded border border-zinc-200 dark:border-zinc-800 shadow-sm" />
                   </div>
 
                   <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-md border border-zinc-200 dark:border-zinc-800 overflow-hidden p-3 flex flex-col items-center">
@@ -420,14 +447,14 @@ export const PdfDiffModal: React.FC = () => {
                       <span className="w-2 h-2 rounded-full bg-emerald-500" />
                       Revision (B) — {docBName}
                     </div>
-                    <img src={diffResult.canvasBUrl} alt="Revision B" className="w-full h-auto rounded border border-zinc-200 dark:border-zinc-800 shadow-sm" />
+                    <img src={diffResult.canvasBUrl} alt="Revision B" className="w-full h-auto max-h-[58vh] object-contain rounded border border-zinc-200 dark:border-zinc-800 shadow-sm" />
                   </div>
                 </div>
               )}
 
               {/* View Mode 3: Visual Heatmap Overlay */}
               {viewMode === 'heatmap' && (
-                <div className="max-w-3xl w-full bg-white dark:bg-zinc-900 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-800 p-3 flex flex-col items-center">
+                <div className="max-w-2xl w-full bg-white dark:bg-zinc-900 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-800 p-3 flex flex-col items-center">
                   <div className="flex items-center justify-between w-full mb-3 text-xs">
                     <span className="font-bold text-zinc-800 dark:text-zinc-200">Pixel Difference Map:</span>
                     <div className="flex items-center gap-3 text-[11px] font-medium">
@@ -436,7 +463,7 @@ export const PdfDiffModal: React.FC = () => {
                       <span className="flex items-center gap-1 text-zinc-400"><span className="w-2.5 h-2.5 rounded-full bg-zinc-300 inline-block" /> Identical</span>
                     </div>
                   </div>
-                  <img src={diffResult.canvasDiffUrl} alt="Diff Overlay" className="w-full h-auto rounded border border-zinc-200 dark:border-zinc-800" />
+                  <img src={diffResult.canvasDiffUrl} alt="Diff Overlay" className="w-full h-auto max-h-[60vh] object-contain rounded border border-zinc-200 dark:border-zinc-800" />
                 </div>
               )}
 
@@ -468,7 +495,12 @@ export const PdfDiffModal: React.FC = () => {
                 </div>
               )}
             </div>
-          ) : null}
+          ) : (
+            <div className="flex flex-col items-center gap-2 text-zinc-400">
+              <GitCompare className="w-8 h-8 opacity-40" />
+              <span className="text-xs">Select or change document to compute difference.</span>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
