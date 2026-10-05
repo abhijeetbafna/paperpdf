@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { usePDFStore } from '../../store/pdfStore';
 import { convertPdfToImages, type RenderedPageImage } from '../../core/converterEngine';
+import { ModalDocumentDropzone } from './ModalDocumentDropzone';
 import { 
   X, 
   Image as ImageIcon, 
@@ -164,12 +165,19 @@ export const PdfToImagesModal: React.FC = () => {
 
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto space-y-5">
-          {/* Preset Quality / DPI Selection */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">
-              Image Resolution & DPI
-            </label>
-            <div className="grid grid-cols-3 gap-3">
+          {!pdfDocProxy ? (
+            <ModalDocumentDropzone
+              title="Select a PDF to export as high-resolution images"
+              subtitle="Extract crisp PNG, JPG, or WebP page images directly in your browser with selectable DPI presets."
+            />
+          ) : (
+            <>
+              {/* Preset Quality / DPI Selection */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">
+                  Image Resolution & DPI
+                </label>
+                <div className="grid grid-cols-3 gap-3">
               {[
                 { dpi: 150, title: '150 DPI', sub: 'Fast & Web Ready', badge: 'Standard' },
                 { dpi: 300, title: '300 DPI', sub: 'Crystal Clear (Recommended)', badge: 'Print HD' },
@@ -365,6 +373,8 @@ export const PdfToImagesModal: React.FC = () => {
                 ))}
               </div>
             </div>
+          )}
+            </>
           )}
         </div>
 

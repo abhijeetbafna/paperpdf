@@ -2,11 +2,14 @@ import React, { useState } from 'react';
 import { usePDFStore } from '../../store/pdfStore';
 import { PageThumbnail } from '../PageThumbnail';
 import { PagePreviewLightbox } from '../PagePreviewLightbox';
+import { ModalDocumentDropzone } from './ModalDocumentDropzone';
 import { X, RotateCw, Trash2, LayoutGrid, Check, ExternalLink, Eye } from 'lucide-react';
 
 export const OrganizeModal: React.FC = () => {
   const { 
+    activeModal,
     setActiveModal, 
+    documentBytes,
     pdfDocProxy,
     pageDimensions, 
     deletedPages, 
@@ -17,6 +20,8 @@ export const OrganizeModal: React.FC = () => {
   } = usePDFStore();
 
   const [previewPageNumber, setPreviewPageNumber] = useState<number | null>(null);
+
+  if (activeModal !== 'organize') return null;
 
   const activePages = pageDimensions.filter(p => !deletedPages.includes(p.pageNumber - 1));
 
@@ -50,10 +55,16 @@ export const OrganizeModal: React.FC = () => {
 
           {/* Modal Body: Scrollable Grid with Real PDF Page Previews */}
           <div className="p-6 overflow-y-auto flex-1 bg-zinc-100/40 dark:bg-zinc-950/40">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {activePages.map((page) => {
-                const pageIdx = page.pageNumber - 1;
-                const rot = pageRotations[pageIdx] || 0;
+            {!documentBytes || activePages.length === 0 ? (
+              <ModalDocumentDropzone
+                title="Select a PDF to organize and rotate pages"
+                subtitle="Upload any document to reorder, delete, and manage its visual page structure."
+              />
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {activePages.map((page) => {
+                  const pageIdx = page.pageNumber - 1;
+                  const rot = pageRotations[pageIdx] || 0;
 
                 return (
                   <div
@@ -143,6 +154,7 @@ export const OrganizeModal: React.FC = () => {
                 );
               })}
             </div>
+            )}
           </div>
 
           {/* Modal Footer */}

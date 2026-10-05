@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { usePDFStore } from '../../store/pdfStore';
 import type { FormFieldAnnotation } from '../../types/pdf';
+import { ModalDocumentDropzone } from './ModalDocumentDropzone';
 import { 
   X, 
   FileSpreadsheet, 
@@ -14,6 +15,7 @@ export const FormResponsesModal: React.FC = () => {
   const { 
     activeModal, 
     setActiveModal, 
+    documentBytes,
     annotations, 
     updateAnnotation, 
     fileName 
@@ -121,7 +123,12 @@ export const FormResponsesModal: React.FC = () => {
 
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto space-y-4">
-          {formFields.length === 0 ? (
+          {!documentBytes ? (
+            <ModalDocumentDropzone
+              title="Select a PDF to manage & fill form data"
+              subtitle="Upload an interactive form document to extract, bulk fill, or export responses to CSV and JSON."
+            />
+          ) : formFields.length === 0 ? (
             <div className="text-center py-8 space-y-2">
               <Table className="w-8 h-8 text-zinc-400 mx-auto" />
               <p className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">

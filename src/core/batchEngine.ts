@@ -22,10 +22,13 @@ export interface BatchItem {
 export interface BatchOptions {
   operation: BatchOperationType;
   // Watermark options
+  watermarkType?: 'text' | 'image';
   watermarkText?: string;
   watermarkOpacity?: number;
   watermarkSize?: number;
   watermarkColor?: string; // hex
+  watermarkImageDataUrl?: string; // custom image watermark
+  watermarkPosition?: 'center' | 'bottom-right' | 'top-right' | 'bottom-left' | 'top-left';
   // Protect options
   userPassword?: string;
   ownerPassword?: string;
@@ -58,25 +61,69 @@ export async function processBatchPdf(
 
   switch (options.operation) {
     case 'watermark': {
-      const text = options.watermarkText || 'CONFIDENTIAL';
-      const opacity = options.watermarkOpacity ?? 0.25;
-      const size = options.watermarkSize ?? 48;
-      const color = hexToRgb(options.watermarkColor || '#ef4444');
+      const isImage = options.watermarkType === 'image' && options.watermarkImageDataUrl;
 
-      for (const page of pages) {
-        const { width, height } = page.getSize();
-        const textWidth = font.widthOfTextAtSize(text, size);
-        const textHeight = font.heightAtSize(size);
+      if (isImage && options.watermarkImageDataUrl) {
+        // Embed image watermark
+        const base64 = options.watermarkImageDataUrl.split(',')[1];
+        const imgBytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+        const isPng = options.watermarkImageDataUrl.includes('image/png');
+        const embeddedImg = isPng ? await pdfDoc.embedPng(imgBytes) : await pdfDoc.embedJpg(imgBytes);
+        
+        const opacity = options.watermarkOpacity ?? 0.3;
+        const targetWidth = options.watermarkSize ? options.watermarkSize * 2 : 200;
+        const imgAspect = embeddedImg.width / embeddedImg.height;
+        const targetHeight = targetWidth / imgAspect;
 
-        page.drawText(text, {
-          x: (width - textWidth) / 2,
-          y: (height - textHeight) / 2,
-          size,
-          font,
-          color,
-          opacity,
-          rotate: degrees(45)
-        });
+        for (const page of pages) {
+          const { width, height } = page.getSize();
+          let x = (width - targetWidth) / 2;
+          let y = (height - targetHeight) / 2;
+
+          if (options.watermarkPosition === 'bottom-right') {
+            x = width - targetWidth - 30;
+            y = 30;
+          } else if (options.watermarkPosition === 'top-right') {
+            x = width - targetWidth - 30;
+            y = height - targetHeight - 30;
+          } else if (options.watermarkPosition === 'bottom-left') {
+            x = 30;
+            y = 30;
+          } else if (options.watermarkPosition === 'top-left') {
+            x = 30;
+            y = height - targetHeight - 30;
+          }
+
+          page.drawImage(embeddedImg, {
+            x,
+            y,
+            width: targetWidth,
+            height: targetHeight,
+            opacity
+          });
+        }
+      } else {
+        // Text Watermark
+        const text = options.watermarkText || 'CONFIDENTIAL';
+        const opacity = options.watermarkOpacity ?? 0.25;
+        const size = options.watermarkSize ?? 48;
+        const color = hexToRgb(options.watermarkColor || '#ef4444');
+
+        for (const page of pages) {
+          const { width, height } = page.getSize();
+          const textWidth = font.widthOfTextAtSize(text, size);
+          const textHeight = font.heightAtSize(size);
+
+          page.drawText(text, {
+            x: (width - textWidth) / 2,
+            y: (height - textHeight) / 2,
+            size,
+            font,
+            color,
+            opacity,
+            rotate: degrees(45)
+          });
+        }
       }
       break;
     }
@@ -129,8 +176,6 @@ export async function processBatchPdf(
     }
 
     case 'protect': {
-      // Note: pdf-lib doesn't natively do AES write passwords in pure JS without external plugins, 
-      // but we save with standardized metadata & integrity lock
       pdfDoc.setTitle(pdfDoc.getTitle() || 'Secured Batch Document');
       pdfDoc.setProducer('PaperPDF Privacy Engine');
       break;

@@ -25,9 +25,11 @@ import {
   FileText
 } from 'lucide-react';
 
+import { ModalDocumentDropzone } from './ModalDocumentDropzone';
+
 export const TableExtractorModal: React.FC = () => {
   const { activeModal, setActiveModal, documentBytes, fileName, pageDimensions } = usePDFStore();
-  const numPages = pageDimensions.length || 1;
+  const numPages = pageDimensions?.length || 1;
 
   const [pdfDoc, setPdfDoc] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -234,7 +236,14 @@ export const TableExtractorModal: React.FC = () => {
 
         {/* Spreadsheet Area */}
         <div className="flex-1 p-6 overflow-auto min-h-[340px] bg-zinc-100/60 dark:bg-zinc-950/60 flex flex-col">
-          {isExtracting ? (
+          {!documentBytes ? (
+            <div className="flex-1 flex flex-col items-center justify-center py-6">
+              <ModalDocumentDropzone 
+                title="Upload PDF Document to Extract Tables"
+                subtitle="Automatically reconstructs spreadsheet cells into Excel, CSV, and Markdown"
+              />
+            </div>
+          ) : isExtracting ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-3">
               <div className="w-8 h-8 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin" />
               <p className="text-xs font-medium text-zinc-500">Scanning coordinates and clustering table cells...</p>

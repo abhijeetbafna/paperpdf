@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { usePDFStore } from '../../store/pdfStore';
 import { convertPdfToPptx } from '../../core/pptEngine';
+import { ModalDocumentDropzone } from './ModalDocumentDropzone';
 import { 
   X, 
   Presentation, 
@@ -115,29 +116,40 @@ export const PdfToPptModal: React.FC = () => {
 
         {/* Content */}
         <div className="p-6 space-y-5">
-          {/* File Picker / Active Document Card */}
-          <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-zinc-500">Selected Document:</span>
-              <label className="cursor-pointer text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">
-                Upload different file
-                <input type="file" accept=".pdf" onChange={handleFileUpload} className="hidden" />
-              </label>
-            </div>
-
-            <div className="flex items-center gap-3 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-sm">
-              <FileText className="w-6 h-6 text-orange-500 shrink-0" />
-              <div className="min-w-0 flex-1">
-                <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate" title={activeDocName}>
-                  {activeDocName}
+          {!documentBytes && !selectedBytes ? (
+            <ModalDocumentDropzone
+              title="Select a PDF to convert to PowerPoint (.pptx)"
+              subtitle="Upload any PDF to render vector slides with high-DPI graphics and editable text notes."
+              onFileLoaded={(file, bytes) => {
+                setSelectedFile(file);
+                setSelectedBytes(bytes);
+              }}
+            />
+          ) : (
+            <>
+              {/* File Picker / Active Document Card */}
+              <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-semibold text-zinc-500">Selected Document:</span>
+                  <label className="cursor-pointer text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">
+                    Upload different file
+                    <input type="file" accept=".pdf" onChange={handleFileUpload} className="hidden" />
+                  </label>
                 </div>
-                <div className="text-[10px] text-zinc-500">Ready for PowerPoint slide conversion</div>
-              </div>
-            </div>
-          </div>
 
-          {/* Features Highlights */}
-          <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="flex items-center gap-3 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                  <FileText className="w-6 h-6 text-orange-500 shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate" title={activeDocName}>
+                      {activeDocName}
+                    </div>
+                    <div className="text-[10px] text-zinc-500">Ready for PowerPoint slide conversion</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Features Highlights */}
+              <div className="grid grid-cols-2 gap-3 text-xs">
             <div className="p-3 rounded-xl bg-orange-50/50 dark:bg-orange-950/20 border border-orange-200/50 dark:border-orange-900/40 flex items-start gap-2.5">
               <Layers className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />
               <div>
@@ -177,6 +189,8 @@ export const PdfToPptModal: React.FC = () => {
               <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
               <span>PowerPoint presentation created and downloaded successfully!</span>
             </div>
+          )}
+            </>
           )}
         </div>
 

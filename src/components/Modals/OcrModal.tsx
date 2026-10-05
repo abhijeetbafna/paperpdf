@@ -23,6 +23,7 @@ import {
   CheckCircle2, 
   AlertTriangle 
 } from 'lucide-react';
+import { ModalDocumentDropzone } from './ModalDocumentDropzone';
 
 export const OcrModal: React.FC = () => {
   const { 
@@ -230,8 +231,17 @@ export const OcrModal: React.FC = () => {
 
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto space-y-5">
-          {/* Controls Bar */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {!documentBytes ? (
+            <div className="py-2">
+              <ModalDocumentDropzone
+                title="Upload Scanned PDF to OCR"
+                subtitle="Extract high-accuracy text, inject searchable layers, or copy raw text"
+              />
+            </div>
+          ) : (
+            <>
+              {/* Controls Bar */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Language Selector */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2 flex items-center gap-1.5">
@@ -429,6 +439,8 @@ export const OcrModal: React.FC = () => {
               </div>
             </div>
           )}
+            </>
+          )}
         </div>
 
         {/* Footer */}
@@ -444,15 +456,17 @@ export const OcrModal: React.FC = () => {
             >
               Close
             </button>
-            <button
-              type="button"
-              onClick={handleStartOcr}
-              disabled={isProcessing}
-              className="flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold shadow-md shadow-purple-500/20 transition-all disabled:opacity-50"
-            >
-              {isProcessing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-              <span>{ocrResults.length > 0 ? 'Re-Run OCR' : 'Start OCR Recognition'}</span>
-            </button>
+            {documentBytes && (
+              <button
+                type="button"
+                onClick={handleStartOcr}
+                disabled={isProcessing}
+                className="flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold shadow-md shadow-purple-500/20 transition-all disabled:opacity-50"
+              >
+                {isProcessing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                <span>{ocrResults.length > 0 ? 'Re-Run OCR' : 'Start OCR Recognition'}</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

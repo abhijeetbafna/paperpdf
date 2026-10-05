@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { usePDFStore } from '../../store/pdfStore';
 import { convertPdfToDocx, convertDocxToPdf, type PdfToDocxOptions, type DocxToPdfOptions } from '../../core/wordEngine';
+import { ModalDocumentDropzone } from './ModalDocumentDropzone';
 import { 
   X, 
   FileText, 
@@ -195,39 +196,48 @@ export const WordConverterModal: React.FC = () => {
         <div className="p-6 overflow-y-auto space-y-5">
           {tab === 'pdf-to-word' && (
             <div className="space-y-4 animate-fade-in">
-              <div className="p-4 rounded-xl bg-blue-50/50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50 space-y-1 text-xs text-blue-900 dark:text-blue-200">
-                <div className="font-bold flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                  <span>Smart Layout & Heading Recognition</span>
-                </div>
-                <p className="text-[11px] leading-relaxed text-blue-700 dark:text-blue-300">
-                  Extracts document lines into structured Word paragraphs, titles, headings, and bold/italic runs formatted for Microsoft Word and Google Docs.
-                </p>
-              </div>
+              {!pdfDocProxy ? (
+                <ModalDocumentDropzone
+                  title="Select a PDF to convert to Microsoft Word (.docx)"
+                  subtitle="Upload any PDF to extract styled paragraphs, headings, and formatting directly into an editable Word document."
+                />
+              ) : (
+                <>
+                  <div className="p-4 rounded-xl bg-blue-50/50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50 space-y-1 text-xs text-blue-900 dark:text-blue-200">
+                    <div className="font-bold flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      <span>Smart Layout & Heading Recognition</span>
+                    </div>
+                    <p className="text-[11px] leading-relaxed text-blue-700 dark:text-blue-300">
+                      Extracts document lines into structured Word paragraphs, titles, headings, and bold/italic runs formatted for Microsoft Word and Google Docs.
+                    </p>
+                  </div>
 
-              <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 space-y-2.5">
-                <div className="text-xs font-bold uppercase tracking-wider text-zinc-500">
-                  Export Preferences
-                </div>
-                <label className="flex items-center gap-2.5 cursor-pointer text-xs">
-                  <input
-                    type="checkbox"
-                    checked={includeFormatting}
-                    onChange={(e) => setIncludeFormatting(e.target.checked)}
-                    className="rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span>Preserve typography, bold/italic weights, and font sizing</span>
-                </label>
-                <label className="flex items-center gap-2.5 cursor-pointer text-xs">
-                  <input
-                    type="checkbox"
-                    checked={preservePageBreaks}
-                    onChange={(e) => setPreservePageBreaks(e.target.checked)}
-                    className="rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span>Insert page breaks matching original PDF page boundaries</span>
-                </label>
-              </div>
+                  <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 space-y-2.5">
+                    <div className="text-xs font-bold uppercase tracking-wider text-zinc-500">
+                      Export Preferences
+                    </div>
+                    <label className="flex items-center gap-2.5 cursor-pointer text-xs">
+                      <input
+                        type="checkbox"
+                        checked={includeFormatting}
+                        onChange={(e) => setIncludeFormatting(e.target.checked)}
+                        className="rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span>Preserve typography, bold/italic weights, and font sizing</span>
+                    </label>
+                    <label className="flex items-center gap-2.5 cursor-pointer text-xs">
+                      <input
+                        type="checkbox"
+                        checked={preservePageBreaks}
+                        onChange={(e) => setPreservePageBreaks(e.target.checked)}
+                        className="rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span>Insert page breaks matching original PDF page boundaries</span>
+                    </label>
+                  </div>
+                </>
+              )}
             </div>
           )}
 

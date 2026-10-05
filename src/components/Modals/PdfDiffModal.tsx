@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { usePDFStore } from '../../store/pdfStore';
 import * as pdfjsLib from 'pdfjs-dist';
-import { comparePdfPages, type DiffResult } from '../../core/diffEngine';
+import { comparePdfPages } from '../../core/diffEngine';
+import type { DiffResult } from '../../core/diffEngine';
 import { 
   X, 
   GitCompare, 
@@ -12,7 +13,6 @@ import {
   FileText, 
   ChevronLeft, 
   ChevronRight, 
-  Sparkles,
   CheckCircle2,
   AlertCircle,
   RefreshCw
@@ -41,7 +41,7 @@ export const PdfDiffModal: React.FC = () => {
   const sliderContainerRef = useRef<HTMLDivElement>(null);
   const isDraggingSlider = useRef(false);
 
-  // Initialize Doc A with active document
+  // Initialize Doc A with active document if available
   useEffect(() => {
     if (activeModal === 'pdfDiff' && documentBytes) {
       setDocABytes(documentBytes.slice());
@@ -54,7 +54,10 @@ export const PdfDiffModal: React.FC = () => {
     let isMounted = true;
 
     async function loadDocs() {
-      if (!docABytes) return;
+      if (!docABytes) {
+        setPdfDocA(null);
+        return;
+      }
 
       try {
         setErrorMessage(null);
@@ -124,21 +127,6 @@ export const PdfDiffModal: React.FC = () => {
 
   if (activeModal !== 'pdfDiff') return null;
 
-  const handleUploadB = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result instanceof ArrayBuffer) {
-          setDocBBytes(new Uint8Array(event.target.result));
-          setDocBName(file.name);
-          setCurrentPage(1);
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    }
-  };
-
   const handleUploadA = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -154,21 +142,42 @@ export const PdfDiffModal: React.FC = () => {
     }
   };
 
+  const handleUploadB = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result instanceof ArrayBuffer) {
+          setDocBBytes(new Uint8Array(event.target.result));
+          setDocBName(file.name);
+          setCurrentPage(1);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+  };
+
   // Slider Dragging Handlers
-  const handleSliderMouseDown = () => {
+  const handleSliderMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     isDraggingSlider.current = true;
+    updateSliderFromPointer(e.clientX);
   };
 
   const handleSliderMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDraggingSlider.current || !sliderContainerRef.current) return;
-    const rect = sliderContainerRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
-    setSliderPosition(percentage);
+    if (!isDraggingSlider.current) return;
+    updateSliderFromPointer(e.clientX);
   };
 
   const handleSliderMouseUp = () => {
     isDraggingSlider.current = false;
+  };
+
+  const updateSliderFromPointer = (clientX: number) => {
+    if (!sliderContainerRef.current) return;
+    const rect = sliderContainerRef.current.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
+    setSliderPosition(Math.round(percentage));
   };
 
   return (
@@ -179,7 +188,7 @@ export const PdfDiffModal: React.FC = () => {
     >
       <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[92vh] flex flex-col overflow-hidden animate-scale-in">
         
-        {/* Modal Header */}
+        {/* Header */}
         <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
@@ -189,11 +198,11 @@ export const PdfDiffModal: React.FC = () => {
               <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
                 <span>Visual PDF Diff & Legal Redline Studio</span>
                 <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
-                  Zero Cloud Upload
+                  Client-Side Wasm
                 </span>
               </h2>
               <p className="text-xs text-zinc-500">
-                Compare two drafts of a contract or drawing to detect exact pixel shifts and modified text.
+                Compare two versions of contracts or drawings pixel-by-pixel with split-screen slider and text diffs.
               </p>
             </div>
           </div>
@@ -211,15 +220,23 @@ export const PdfDiffModal: React.FC = () => {
           {/* Document Pills */}
           <div className="flex items-center gap-2 flex-wrap">
             {/* Doc A */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg text-xs shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
-              <span className="font-semibold text-zinc-500">A (Original):</span>
-              <span className="font-medium text-zinc-800 dark:text-zinc-200 max-w-[130px] truncate" title={docAName}>{docAName}</span>
-              <label className="cursor-pointer text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline ml-1">
-                Change
+            {docABytes ? (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg text-xs shadow-sm">
+                <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
+                <span className="font-semibold text-zinc-500">A (Original):</span>
+                <span className="font-medium text-zinc-800 dark:text-zinc-200 max-w-[130px] truncate" title={docAName}>{docAName}</span>
+                <label className="cursor-pointer text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline ml-1">
+                  Change
+                  <input type="file" accept=".pdf" onChange={handleUploadA} className="hidden" />
+                </label>
+              </div>
+            ) : (
+              <label className="flex items-center gap-1.5 px-3 py-1 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-xs font-bold cursor-pointer transition-colors shadow-sm">
+                <Upload className="w-3.5 h-3.5" />
+                <span>Select Original PDF (A)</span>
                 <input type="file" accept=".pdf" onChange={handleUploadA} className="hidden" />
               </label>
-            </div>
+            )}
 
             <span className="text-zinc-400 text-xs font-bold">vs</span>
 
@@ -244,7 +261,7 @@ export const PdfDiffModal: React.FC = () => {
           </div>
 
           {/* View Modes */}
-          {docBBytes && (
+          {docABytes && docBBytes && (
             <div className="flex items-center gap-2">
               <div className="flex items-center bg-zinc-200/80 dark:bg-zinc-800 p-0.5 rounded-lg text-xs font-medium">
                 <button
@@ -322,18 +339,33 @@ export const PdfDiffModal: React.FC = () => {
 
         {/* Main Content Area */}
         <div className="flex-1 p-6 overflow-y-auto min-h-[420px] bg-zinc-100/60 dark:bg-zinc-950/60 flex flex-col items-center justify-center">
-          {!docBBytes ? (
+          {!docABytes ? (
+            <div className="text-center max-w-md p-8 border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-2xl bg-white dark:bg-zinc-900 shadow-sm">
+              <div className="w-14 h-14 rounded-2xl bg-red-50 dark:bg-red-950/50 text-red-600 dark:text-red-400 flex items-center justify-center mx-auto mb-4">
+                <FileText className="w-7 h-7" />
+              </div>
+              <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mb-1">Upload Original PDF (Draft A)</h3>
+              <p className="text-xs text-zinc-500 mb-5 leading-relaxed">
+                Select your original baseline PDF to begin comparing revisions, text redlines, and pixel shifts.
+              </p>
+              <label className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-xl text-xs font-bold cursor-pointer transition-all shadow-md hover:scale-105">
+                <Upload className="w-4 h-4" />
+                <span>Select Original Document A</span>
+                <input type="file" accept=".pdf" onChange={handleUploadA} className="hidden" />
+              </label>
+            </div>
+          ) : !docBBytes ? (
             <div className="text-center max-w-md p-8 border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-2xl bg-white dark:bg-zinc-900 shadow-sm">
               <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto mb-4">
                 <GitCompare className="w-7 h-7" />
               </div>
-              <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mb-1">Upload Revised Document</h3>
+              <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mb-1">Upload Revised Document (Draft B)</h3>
               <p className="text-xs text-zinc-500 mb-5 leading-relaxed">
-                Select a revised version of this PDF to run pixel-by-pixel differential overlay, visual split-screen comparison, and text redline analysis.
+                Select a revised version to run pixel-by-pixel differential overlay, visual split-screen comparison, and text redline analysis against <strong className="text-zinc-700 dark:text-zinc-300">{docAName}</strong>.
               </p>
-              <label className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold cursor-pointer transition-all shadow-md">
+              <label className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold cursor-pointer transition-all shadow-md hover:scale-105">
                 <Upload className="w-4 h-4" />
-                <span>Select Document B (.pdf)</span>
+                <span>Select Revised Document B (.pdf)</span>
                 <input type="file" accept=".pdf" onChange={handleUploadB} className="hidden" />
               </label>
             </div>
@@ -386,47 +418,64 @@ export const PdfDiffModal: React.FC = () => {
 
               {/* View Mode 1: Split Slider */}
               {viewMode === 'slider' && (
-                <div 
-                  ref={sliderContainerRef}
-                  className="relative max-w-2xl w-full bg-white dark:bg-zinc-900 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden select-none cursor-ew-resize flex items-center justify-center"
-                  onMouseDown={handleSliderMouseDown}
-                >
-                  {/* Layer B (Revision) */}
-                  <img 
-                    src={diffResult.canvasBUrl} 
-                    alt="Revision B" 
-                    className="w-full h-auto max-h-[62vh] object-contain block pointer-events-none" 
-                  />
-
-                  {/* Layer A (Original Clipped) */}
+                <div className="flex flex-col items-center gap-3 w-full max-w-3xl">
                   <div 
-                    className="absolute inset-0 overflow-hidden border-r-2 border-indigo-500 pointer-events-none"
-                    style={{ width: `${sliderPosition}%` }}
+                    ref={sliderContainerRef}
+                    onMouseDown={handleSliderMouseDown}
+                    className="relative w-full bg-white dark:bg-zinc-900 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden select-none flex items-center justify-center cursor-ew-resize min-h-[360px]"
                   >
+                    {/* Layer B (Revision) */}
                     <img 
-                      src={diffResult.canvasAUrl} 
-                      alt="Original A" 
-                      className="max-w-none h-full block pointer-events-none" 
-                      style={{ width: sliderContainerRef.current?.clientWidth || '100%' }}
+                      src={diffResult.canvasBUrl} 
+                      alt="Revision B" 
+                      className="w-full h-auto max-h-[62vh] object-contain block pointer-events-none" 
                     />
-                  </div>
 
-                  {/* Slider Handle */}
-                  <div 
-                    className="absolute top-0 bottom-0 w-0.5 bg-indigo-600 flex items-center justify-center pointer-events-none"
-                    style={{ left: `${sliderPosition}%` }}
-                  >
-                    <div className="w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg border-2 border-white text-[10px] font-bold">
-                      ↔
+                    {/* Layer A (Original) with Polygon Clip Path */}
+                    <div 
+                      className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none"
+                      style={{
+                        clipPath: `polygon(0 0, ${sliderPosition}% 0, ${sliderPosition}% 100%, 0 100%)`
+                      }}
+                    >
+                      <img 
+                        src={diffResult.canvasAUrl} 
+                        alt="Original A" 
+                        className="w-full h-auto max-h-[62vh] object-contain block pointer-events-none" 
+                      />
+                    </div>
+
+                    {/* Vertical Divider Line */}
+                    <div 
+                      className="absolute top-0 bottom-0 w-0.5 bg-indigo-600 pointer-events-none shadow-md"
+                      style={{ left: `${sliderPosition}%` }}
+                    >
+                      <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-xl border-2 border-white text-xs font-bold pointer-events-auto cursor-ew-resize">
+                        ↔
+                      </div>
+                    </div>
+
+                    {/* Badges */}
+                    <div className="absolute top-3 left-3 bg-red-600/90 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow pointer-events-none">
+                      Original (A)
+                    </div>
+                    <div className="absolute top-3 right-3 bg-emerald-600/90 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow pointer-events-none">
+                      Revision (B)
                     </div>
                   </div>
 
-                  {/* Badges */}
-                  <div className="absolute top-3 left-3 bg-red-600/90 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow pointer-events-none">
-                    Original (A)
-                  </div>
-                  <div className="absolute top-3 right-3 bg-emerald-600/90 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow pointer-events-none">
-                    Revision (B)
+                  {/* Range Slider Track */}
+                  <div className="w-full flex items-center gap-3 px-2 bg-white dark:bg-zinc-900 p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                    <span className="text-[11px] font-bold text-red-600 shrink-0">Original (A)</span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={sliderPosition}
+                      onChange={(e) => setSliderPosition(Number(e.target.value))}
+                      className="flex-1 accent-indigo-600 cursor-pointer h-2 bg-zinc-200 dark:bg-zinc-700 rounded-lg"
+                    />
+                    <span className="text-[11px] font-bold text-emerald-600 shrink-0">Revision (B)</span>
                   </div>
                 </div>
               )}
@@ -469,54 +518,45 @@ export const PdfDiffModal: React.FC = () => {
 
               {/* View Mode 4: Text Redline */}
               {viewMode === 'redline' && (
-                <div className="max-w-4xl w-full bg-white dark:bg-zinc-900 rounded-xl shadow-md border border-zinc-200 dark:border-zinc-800 p-5">
-                  <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider mb-3">
-                    Unified Text Redline Stream
-                  </h4>
-                  <div className="p-4 bg-zinc-50 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800 text-xs font-mono leading-relaxed max-h-[360px] overflow-y-auto whitespace-pre-wrap">
-                    {diffResult.wordDiffs.map((word, idx) => {
-                      if (word.type === 'added') {
+                <div className="w-full max-w-4xl bg-white dark:bg-zinc-900 rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-800 p-5 flex flex-col gap-4">
+                  <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                    <h4 className="text-xs font-bold text-zinc-800 dark:text-zinc-200">Legal Text Change Stream:</h4>
+                    <div className="flex items-center gap-3 text-[11px]">
+                      <span className="text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">+ Inserted</span>
+                      <span className="text-red-600 font-bold bg-red-50 dark:bg-red-950 px-2 py-0.5 rounded border border-red-200 dark:border-red-800">- Deleted</span>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs sm:text-sm leading-relaxed font-serif max-h-[48vh] overflow-y-auto select-text">
+                    {diffResult.wordDiffs.map((chunk, idx) => {
+                      if (chunk.type === 'added') {
                         return (
-                          <span key={idx} className="bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-bold px-1 rounded mx-0.5">
-                            +{word.text}{' '}
+                          <span 
+                            key={idx} 
+                            className="bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-200 underline decoration-emerald-500 font-medium px-0.5 mx-0.5 rounded"
+                          >
+                            {chunk.text}{' '}
                           </span>
                         );
                       }
-                      if (word.type === 'removed') {
+                      if (chunk.type === 'removed') {
                         return (
-                          <span key={idx} className="bg-red-100 dark:bg-red-950/80 text-red-700 dark:text-red-400 line-through px-1 rounded mx-0.5">
-                            -{word.text}{' '}
+                          <span 
+                            key={idx} 
+                            className="bg-red-100 dark:bg-red-950/80 text-red-800 dark:text-red-200 line-through decoration-red-500 opacity-80 px-0.5 mx-0.5 rounded"
+                          >
+                            {chunk.text}{' '}
                           </span>
                         );
                       }
-                      return <span key={idx} className="text-zinc-700 dark:text-zinc-300">{word.text} </span>;
+                      return <span key={idx}>{chunk.text} </span>;
                     })}
                   </div>
                 </div>
               )}
             </div>
-          ) : (
-            <div className="flex flex-col items-center gap-2 text-zinc-400">
-              <GitCompare className="w-8 h-8 opacity-40" />
-              <span className="text-xs">Select or change document to compute difference.</span>
-            </div>
-          )}
+          ) : null}
         </div>
-
-        {/* Footer */}
-        <div className="px-6 py-3 bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-2 text-[11px] text-zinc-500">
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span>100% In-Browser Privacy Diff: No files leave your machine.</span>
-          </div>
-          <button
-            onClick={() => setActiveModal(null)}
-            className="px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-xs font-bold text-zinc-700 dark:text-zinc-200 transition-colors"
-          >
-            Close Diff Studio
-          </button>
-        </div>
-
       </div>
     </div>
   );

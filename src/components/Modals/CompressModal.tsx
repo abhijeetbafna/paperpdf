@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { usePDFStore } from '../../store/pdfStore';
 import { compressPDFDocument } from '../../core/pdfEngine';
 import { X, Zap, Download, CheckCircle2, FileCheck, ArrowRight } from 'lucide-react';
+import { ModalDocumentDropzone } from './ModalDocumentDropzone';
 
 export const CompressModal: React.FC = () => {
   const { setActiveModal, documentBytes, fileName, loadDocument } = usePDFStore();
@@ -89,7 +90,14 @@ export const CompressModal: React.FC = () => {
 
         {/* Body */}
         <div className="p-5 space-y-4">
-          {!result ? (
+          {!documentBytes ? (
+            <div className="py-2">
+              <ModalDocumentDropzone
+                title="Upload PDF to Compress"
+                subtitle="Reduce PDF file size locally with lossless and extreme compression presets"
+              />
+            </div>
+          ) : !result ? (
             <>
               <div className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
                 Select Compression Preset

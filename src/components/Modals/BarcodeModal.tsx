@@ -411,8 +411,8 @@ export const BarcodeModal: React.FC = () => {
               )}
             </div>
 
-            {/* PDF Stamp Options (if document loaded) */}
-            {documentBytes && (
+            {/* PDF Stamp Options (if document loaded or prompt to upload) */}
+            {documentBytes ? (
               <div className="p-3 bg-purple-50/50 dark:bg-purple-950/30 border border-purple-200/60 dark:border-purple-800/40 rounded-xl space-y-2.5">
                 <div className="text-xs font-semibold text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
                   <Stamp className="w-3.5 h-3.5" /> Stamp onto Loaded Document
@@ -456,6 +456,33 @@ export const BarcodeModal: React.FC = () => {
                     />
                   </div>
                 </div>
+              </div>
+            ) : (
+              <div className="p-3 bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-700/60 rounded-xl flex items-center justify-between">
+                <div>
+                  <div className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Stamp directly onto a PDF?</div>
+                  <div className="text-[10px] text-zinc-500">Upload a document to position & stamp this code</div>
+                </div>
+                <label className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold cursor-pointer transition-colors shadow-sm">
+                  Upload PDF
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          if (ev.target?.result instanceof ArrayBuffer) {
+                            loadDocument(new Uint8Array(ev.target.result), f.name);
+                          }
+                        };
+                        reader.readAsArrayBuffer(f);
+                      }
+                    }}
+                    className="hidden"
+                  />
+                </label>
               </div>
             )}
           </div>

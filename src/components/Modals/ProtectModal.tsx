@@ -13,6 +13,7 @@ import {
   CheckCircle2, 
   AlertTriangle
 } from 'lucide-react';
+import { ModalDocumentDropzone } from './ModalDocumentDropzone';
 
 export const ProtectModal: React.FC = () => {
   const { 
@@ -234,7 +235,16 @@ export const ProtectModal: React.FC = () => {
 
         {/* Body Content */}
         <div className="p-6 overflow-y-auto space-y-5">
-          {tab === 'encrypt' && (
+          {!documentBytes ? (
+            <div className="py-2">
+              <ModalDocumentDropzone 
+                title="Upload PDF Document to Protect & Encrypt"
+                subtitle="Apply AES encryption, restrict permissions, or sanitize metadata"
+              />
+            </div>
+          ) : (
+            <>
+              {tab === 'encrypt' && (
             <div className="space-y-4 animate-fade-in">
               <div className="space-y-3">
                 <div>
@@ -377,6 +387,8 @@ export const ProtectModal: React.FC = () => {
               <CheckCircle2 className="w-4 h-4 shrink-0" />
               <span>{successMessage}</span>
             </div>
+          )}
+            </>
           )}
         </div>
 

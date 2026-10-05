@@ -20,21 +20,37 @@ import {
   Hash, 
   Droplet, 
   FileCheck,
-  Archive
+  Archive,
+  Image as ImageIcon
 } from 'lucide-react';
 import { PDFDocument } from 'pdf-lib';
+
+const OPERATION_LABELS: Record<BatchOperationType, string> = {
+  watermark: 'Watermark',
+  pageNumbers: 'Page Numbers',
+  rotate: 'Page Rotation',
+  flatten: 'Form Flattening',
+  protect: 'Document Protection'
+};
 
 export const BatchProcessingModal: React.FC = () => {
   const { activeModal, setActiveModal } = usePDFStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const watermarkImageInputRef = useRef<HTMLInputElement>(null);
 
   const [items, setItems] = useState<BatchItem[]>([]);
   const [operation, setOperation] = useState<BatchOperationType>('watermark');
   
-  // Operation configs
+  // Watermark configs
+  const [watermarkType, setWatermarkType] = useState<'text' | 'image'>('text');
   const [watermarkText, setWatermarkText] = useState('CONFIDENTIAL');
   const [watermarkColor, setWatermarkColor] = useState('#ef4444');
   const [watermarkOpacity, setWatermarkOpacity] = useState(0.25);
+  const [watermarkSize, setWatermarkSize] = useState(48);
+  const [watermarkImageDataUrl, setWatermarkImageDataUrl] = useState<string | null>(null);
+  const [watermarkPosition, setWatermarkPosition] = useState<'center' | 'bottom-right' | 'top-right' | 'bottom-left' | 'top-left'>('center');
+
+  // Page Numbers configs
   const [pageNumberFormat, setPageNumberFormat] = useState<'Page {n} of {total}' | 'Page {n}' | '{n} / {total}'>('Page {n} of {total}');
   const [pageNumberPosition, setPageNumberPosition] = useState<'bottom-center' | 'bottom-right' | 'bottom-left' | 'top-right'>('bottom-center');
   const [rotationAngle, setRotationAngle] = useState<90 | 180 | 270>(90);
@@ -76,6 +92,19 @@ export const BatchProcessingModal: React.FC = () => {
     setIsDone(false);
   };
 
+  const handleWatermarkImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (typeof event.target?.result === 'string') {
+          setWatermarkImageDataUrl(event.target.result);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleRemoveItem = (id: string) => {
     setItems((prev) => prev.filter((item) => item.id !== id));
   };
@@ -100,9 +129,13 @@ export const BatchProcessingModal: React.FC = () => {
       try {
         const processed = await processBatchPdf(updated[i].bytes, {
           operation,
+          watermarkType,
           watermarkText,
           watermarkColor,
           watermarkOpacity,
+          watermarkSize,
+          watermarkImageDataUrl: watermarkImageDataUrl || undefined,
+          watermarkPosition,
           pageNumberFormat,
           pageNumberPosition,
           rotationAngle
@@ -179,7 +212,7 @@ export const BatchProcessingModal: React.FC = () => {
               <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1.5">Select Batch Action</label>
               <div className="space-y-1.5">
                 {[
-                  { id: 'watermark', label: 'Bulk Watermark', desc: 'Stamp diagonal text across all pages', icon: Droplet },
+                  { id: 'watermark', label: 'Bulk Watermark', desc: 'Stamp text or custom logo across all pages', icon: Droplet },
                   { id: 'pageNumbers', label: 'Bulk Page Numbers', desc: 'Add clean footer or header numbering', icon: Hash },
                   { id: 'rotate', label: 'Bulk Rotate Pages', desc: 'Rotate orientation for all files', icon: RotateCw },
                   { id: 'flatten', label: 'Bulk Flatten Form Fields', desc: 'Bake annotations & forms permanently', icon: FileCheck }
@@ -210,38 +243,148 @@ export const BatchProcessingModal: React.FC = () => {
             <div className="p-3 bg-zinc-50 dark:bg-zinc-800/60 rounded-xl border border-zinc-200 dark:border-zinc-700 space-y-3">
               {operation === 'watermark' && (
                 <>
-                  <div>
-                    <label className="text-[11px] font-semibold text-zinc-600 dark:text-zinc-300 block mb-1">Watermark Text</label>
-                    <input
-                      type="text"
-                      value={watermarkText}
-                      onChange={(e) => setWatermarkText(e.target.value)}
-                      className="w-full px-3 py-1.5 text-xs rounded-lg bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 font-semibold"
-                    />
+                  {/* Watermark Type Toggle */}
+                  <div className="flex p-1 bg-zinc-200/70 dark:bg-zinc-900 rounded-lg gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setWatermarkType('text')}
+                      className={`flex-1 py-1 text-xs font-semibold rounded-md transition-colors ${
+                        watermarkType === 'text'
+                          ? 'bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                          : 'text-zinc-500 dark:text-zinc-400'
+                      }`}
+                    >
+                      Text Stamp
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setWatermarkType('image')}
+                      className={`flex-1 py-1 text-xs font-semibold rounded-md transition-colors ${
+                        watermarkType === 'image'
+                          ? 'bg-white dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                          : 'text-zinc-500 dark:text-zinc-400'
+                      }`}
+                    >
+                      Logo / Image
+                    </button>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-[11px] text-zinc-500 block mb-1">Color</label>
-                      <input
-                        type="color"
-                        value={watermarkColor}
-                        onChange={(e) => setWatermarkColor(e.target.value)}
-                        className="w-full h-8 rounded-lg cursor-pointer bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700"
-                      />
+
+                  {watermarkType === 'text' ? (
+                    <>
+                      <div>
+                        <label className="text-[11px] font-semibold text-zinc-600 dark:text-zinc-300 block mb-1">Watermark Text</label>
+                        <input
+                          type="text"
+                          value={watermarkText}
+                          onChange={(e) => setWatermarkText(e.target.value)}
+                          className="w-full px-3 py-1.5 text-xs rounded-lg bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 font-semibold"
+                        />
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <label className="text-[11px] text-zinc-500 block mb-1">Color</label>
+                          <input
+                            type="color"
+                            value={watermarkColor}
+                            onChange={(e) => setWatermarkColor(e.target.value)}
+                            className="w-full h-8 rounded-lg cursor-pointer bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[11px] text-zinc-500 block mb-1">Opacity ({Math.round(watermarkOpacity * 100)}%)</label>
+                          <input
+                            type="range"
+                            min="0.05"
+                            max="0.8"
+                            step="0.05"
+                            value={watermarkOpacity}
+                            onChange={(e) => setWatermarkOpacity(Number(e.target.value))}
+                            className="w-full mt-2"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[11px] text-zinc-500 block mb-1">Size ({watermarkSize}pt)</label>
+                          <input
+                            type="range"
+                            min="18"
+                            max="96"
+                            step="2"
+                            value={watermarkSize}
+                            onChange={(e) => setWatermarkSize(Number(e.target.value))}
+                            className="w-full mt-2"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    /* Image / Logo Watermark */
+                    <div className="space-y-2.5">
+                      <div>
+                        <label className="text-[11px] font-semibold text-zinc-600 dark:text-zinc-300 block mb-1">
+                          Upload Watermark Logo (PNG / JPG)
+                        </label>
+                        <input
+                          type="file"
+                          ref={watermarkImageInputRef}
+                          onChange={handleWatermarkImageUpload}
+                          accept="image/png,image/jpeg"
+                          className="hidden"
+                        />
+                        {watermarkImageDataUrl ? (
+                          <div className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700">
+                            <div className="flex items-center gap-2">
+                              <img src={watermarkImageDataUrl} alt="Logo" className="w-8 h-8 object-contain rounded border" />
+                              <span className="text-[11px] text-zinc-600 dark:text-zinc-300 font-medium">Logo selected</span>
+                            </div>
+                            <button
+                              onClick={() => setWatermarkImageDataUrl(null)}
+                              className="text-rose-500 hover:text-rose-600 p-1"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => watermarkImageInputRef.current?.click()}
+                            className="w-full py-2.5 px-3 border border-dashed border-zinc-300 dark:border-zinc-700 hover:border-emerald-500 rounded-lg text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-white dark:bg-zinc-900 flex items-center justify-center gap-1.5"
+                          >
+                            <ImageIcon className="w-4 h-4" />
+                            <span>Select PNG / JPG Logo</span>
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[11px] text-zinc-500 block mb-1">Position</label>
+                          <select
+                            value={watermarkPosition}
+                            onChange={(e) => setWatermarkPosition(e.target.value as any)}
+                            className="w-full px-2 py-1.5 text-xs rounded-lg bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700"
+                          >
+                            <option value="center">Center</option>
+                            <option value="bottom-right">Bottom Right</option>
+                            <option value="top-right">Top Right</option>
+                            <option value="bottom-left">Bottom Left</option>
+                            <option value="top-left">Top Left</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[11px] text-zinc-500 block mb-1">Opacity ({Math.round(watermarkOpacity * 100)}%)</label>
+                          <input
+                            type="range"
+                            min="0.1"
+                            max="1.0"
+                            step="0.05"
+                            value={watermarkOpacity}
+                            onChange={(e) => setWatermarkOpacity(Number(e.target.value))}
+                            className="w-full mt-2"
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-[11px] text-zinc-500 block mb-1">Opacity ({Math.round(watermarkOpacity * 100)}%)</label>
-                      <input
-                        type="range"
-                        min="0.05"
-                        max="0.8"
-                        step="0.05"
-                        value={watermarkOpacity}
-                        onChange={(e) => setWatermarkOpacity(Number(e.target.value))}
-                        className="w-full mt-2"
-                      />
-                    </div>
-                  </div>
+                  )}
                 </>
               )}
 
@@ -420,7 +563,7 @@ export const BatchProcessingModal: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <Layers className="w-4 h-4" /> Execute Batch {operation}
+                      <Layers className="w-4 h-4" /> Execute Batch {OPERATION_LABELS[operation]}
                     </>
                   )}
                 </button>

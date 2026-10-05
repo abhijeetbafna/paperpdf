@@ -15,8 +15,10 @@ import {
   FileText
 } from 'lucide-react';
 
+import { ModalDocumentDropzone } from './ModalDocumentDropzone';
+
 export const TtsReaderModal: React.FC = () => {
-  const { activeModal, setActiveModal, pdfDocProxy, pageDimensions, currentPage } = usePDFStore();
+  const { activeModal, setActiveModal, documentBytes, pdfDocProxy, pageDimensions, currentPage } = usePDFStore();
   
   const engineRef = useRef<TtsEngine | null>(null);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
@@ -174,7 +176,15 @@ export const TtsReaderModal: React.FC = () => {
         </div>
 
         {/* Content Body */}
-        <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-12 gap-6">
+        {!documentBytes ? (
+          <div className="p-8 flex items-center justify-center">
+            <ModalDocumentDropzone 
+              title="Upload PDF Document for Natural Voice Reading"
+              subtitle="Listen to any PDF page or full document with synchronized voice highlighting"
+            />
+          </div>
+        ) : (
+          <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-12 gap-6">
           
           {/* Controls Column */}
           <div className="md:col-span-5 space-y-4">
@@ -351,6 +361,7 @@ export const TtsReaderModal: React.FC = () => {
             </div>
           </div>
         </div>
+        )}
       </div>
     </div>
   );
