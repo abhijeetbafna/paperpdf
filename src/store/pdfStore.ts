@@ -53,7 +53,7 @@ interface PDFState {
   redoStack: HistoryState[];
 
   // Modals
-  activeModal: 'merge' | 'split' | 'organize' | 'signature' | 'compress' | 'pageNumbers' | null;
+  activeModal: 'merge' | 'split' | 'organize' | 'signature' | 'compress' | 'pageNumbers' | 'pdfToImages' | 'imagesToPdf' | null;
 
   // Actions
   loadDocument: (bytes: Uint8Array, fileName: string) => Promise<void>;
@@ -67,7 +67,7 @@ interface PDFState {
   setCurrentPage: (page: number) => void;
   setTheme: (theme: 'dark' | 'light') => void;
   toggleTheme: () => void;
-  setActiveModal: (modal: 'merge' | 'split' | 'organize' | 'signature' | 'compress' | 'pageNumbers' | null) => void;
+  setActiveModal: (modal: 'merge' | 'split' | 'organize' | 'signature' | 'compress' | 'pageNumbers' | 'pdfToImages' | 'imagesToPdf' | null) => void;
 
   selectTextItem: (id: string | null) => void;
   selectAnnotation: (id: string | null) => void;

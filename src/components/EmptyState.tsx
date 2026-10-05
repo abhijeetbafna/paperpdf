@@ -9,7 +9,8 @@ import {
   Combine, 
   Scissors, 
   Lock,
-  Zap
+  Zap,
+  FileUp
 } from 'lucide-react';
 
 export const EmptyState: React.FC = () => {
@@ -115,7 +116,19 @@ export const EmptyState: React.FC = () => {
         </div>
 
         {/* Quick Tool Launchers */}
-        <div className="grid grid-cols-3 gap-3 pt-2 text-left">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-left">
+          <div 
+            onClick={() => setActiveModal('imagesToPdf')}
+            className="p-3.5 rounded-xl bg-white/60 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800/80 hover:border-emerald-500/50 dark:hover:border-emerald-500/50 cursor-pointer transition-all shadow-sm hover:scale-[1.02]"
+          >
+            <div className="flex items-center gap-2 mb-1 text-xs font-semibold text-zinc-800 dark:text-zinc-200">
+              <FileUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> Images to PDF
+            </div>
+            <p className="text-[11px] text-zinc-500 leading-tight">
+              Convert JPG/PNG to a unified document.
+            </p>
+          </div>
+
           <div 
             onClick={() => setActiveModal('merge')}
             className="p-3.5 rounded-xl bg-white/60 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer transition-colors shadow-sm"
@@ -124,7 +137,7 @@ export const EmptyState: React.FC = () => {
               <Combine className="w-4 h-4 text-blue-600 dark:text-blue-400" /> Merge PDFs
             </div>
             <p className="text-[11px] text-zinc-500 leading-tight">
-              Combine multiple files into one PDF document.
+              Combine multiple files into one PDF.
             </p>
           </div>
 
@@ -136,7 +149,7 @@ export const EmptyState: React.FC = () => {
               <Scissors className="w-4 h-4 text-amber-600 dark:text-amber-400" /> Split & Extract
             </div>
             <p className="text-[11px] text-zinc-500 leading-tight">
-              Select and export individual pages or ranges.
+              Extract individual pages or ranges.
             </p>
           </div>
 
@@ -145,10 +158,10 @@ export const EmptyState: React.FC = () => {
             className="p-3.5 rounded-xl bg-white/60 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer transition-colors shadow-sm"
           >
             <div className="flex items-center gap-2 mb-1 text-xs font-semibold text-zinc-800 dark:text-zinc-200">
-              <Edit3 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> Reorder Pages
+              <Edit3 className="w-4 h-4 text-purple-600 dark:text-purple-400" /> Reorder Pages
             </div>
             <p className="text-[11px] text-zinc-500 leading-tight">
-              Rotate, organize, and delete pages visually.
+              Rotate, organize, and delete pages.
             </p>
           </div>
         </div>

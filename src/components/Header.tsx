@@ -31,7 +31,9 @@ import {
   Zap, 
   Hash,
   MoreHorizontal,
-  Check
+  Check,
+  Image as ImageIcon,
+  FileUp
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
@@ -734,6 +736,36 @@ export const Header: React.FC = () => {
                     <div>
                       <div className="font-semibold">Page Numbers & Headers</div>
                       <div className="text-[10px] text-zinc-500">Add dynamic pagination</div>
+                    </div>
+                  </button>
+
+                  <div className="my-1 border-t border-zinc-200 dark:border-zinc-800" />
+
+                  <button
+                    onClick={() => {
+                      setActiveModal('pdfToImages');
+                      setShowToolsMenu(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors text-left"
+                  >
+                    <ImageIcon className="w-4 h-4 text-blue-500" />
+                    <div>
+                      <div className="font-semibold">PDF to Images</div>
+                      <div className="text-[10px] text-zinc-500">Export high-DPI PNG / JPG / ZIP</div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setActiveModal('imagesToPdf');
+                      setShowToolsMenu(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors text-left"
+                  >
+                    <FileUp className="w-4 h-4 text-emerald-500" />
+                    <div>
+                      <div className="font-semibold">Images to PDF</div>
+                      <div className="text-[10px] text-zinc-500">Convert JPG/PNG images to PDF</div>
                     </div>
                   </button>
                 </div>

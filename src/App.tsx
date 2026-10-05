@@ -10,6 +10,8 @@ import { OrganizeModal } from './components/Modals/OrganizeModal';
 import { SignatureModal } from './components/Modals/SignatureModal';
 import { CompressModal } from './components/Modals/CompressModal';
 import { PageNumbersModal } from './components/Modals/PageNumbersModal';
+import { PdfToImagesModal } from './components/Modals/PdfToImagesModal';
+import { ImagesToPdfModal } from './components/Modals/ImagesToPdfModal';
 
 export const App: React.FC = () => {
   const { documentBytes, activeModal, isLoading, loadingMessage } = usePDFStore();
@@ -39,6 +41,8 @@ export const App: React.FC = () => {
       {activeModal === 'signature' && <SignatureModal />}
       {activeModal === 'compress' && <CompressModal />}
       {activeModal === 'pageNumbers' && <PageNumbersModal />}
+      {activeModal === 'pdfToImages' && <PdfToImagesModal />}
+      {activeModal === 'imagesToPdf' && <ImagesToPdfModal />}
 
       {/* Loading Overlay */}
       {isLoading && (
