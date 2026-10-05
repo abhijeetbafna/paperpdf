@@ -13,6 +13,27 @@ import {
   generateSampleInvoicePDF 
 } from '../core/pdfEngine';
 
+export type ActiveModalType = 
+  | 'merge' 
+  | 'split' 
+  | 'organize' 
+  | 'signature' 
+  | 'compress' 
+  | 'pageNumbers' 
+  | 'pdfToImages' 
+  | 'imagesToPdf' 
+  | 'protect' 
+  | 'wordConverter' 
+  | 'ocr' 
+  | 'formResponses' 
+  | 'pdfDiff' 
+  | 'tableExtractor' 
+  | 'pdfToPpt' 
+  | 'barcodeGenerator' 
+  | 'batchStudio' 
+  | 'ttsReader' 
+  | null;
+
 interface PDFState {
   // Document State
   documentBytes: Uint8Array | null;
@@ -53,7 +74,7 @@ interface PDFState {
   redoStack: HistoryState[];
 
   // Modals
-  activeModal: 'merge' | 'split' | 'organize' | 'signature' | 'compress' | 'pageNumbers' | 'pdfToImages' | 'imagesToPdf' | 'protect' | 'wordConverter' | 'ocr' | 'formResponses' | 'pdfDiff' | 'tableExtractor' | 'pdfToPpt' | null;
+  activeModal: ActiveModalType;
 
   // Actions
   loadDocument: (bytes: Uint8Array, fileName: string) => Promise<void>;
@@ -67,7 +88,7 @@ interface PDFState {
   setCurrentPage: (page: number) => void;
   setTheme: (theme: 'dark' | 'light') => void;
   toggleTheme: () => void;
-  setActiveModal: (modal: 'merge' | 'split' | 'organize' | 'signature' | 'compress' | 'pageNumbers' | 'pdfToImages' | 'imagesToPdf' | 'protect' | 'wordConverter' | 'ocr' | 'formResponses' | 'pdfDiff' | 'tableExtractor' | 'pdfToPpt' | null) => void;
+  setActiveModal: (modal: ActiveModalType) => void;
 
   selectTextItem: (id: string | null) => void;
   selectAnnotation: (id: string | null) => void;

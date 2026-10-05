@@ -41,7 +41,9 @@ import {
   FileSpreadsheet,
   GitCompare,
   Table,
-  Presentation
+  Presentation,
+  Volume2,
+  QrCode
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
@@ -841,14 +843,30 @@ export const Header: React.FC = () => {
                           setActiveModal('pageNumbers');
                           setShowToolsMenu(false);
                         }}
-                        className="flex items-center gap-2.5 p-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-left group sm:col-span-2"
+                        className="flex items-center gap-2.5 p-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-left group"
                       >
                         <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
                           <Hash className="w-3.5 h-3.5" />
                         </div>
                         <div>
-                          <div className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-indigo-600 transition-colors">Page Numbers & Headers</div>
-                          <div className="text-[10px] text-zinc-500">Add dynamic pagination, Bates numbering & labels</div>
+                          <div className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-indigo-600 transition-colors">Page Numbers</div>
+                          <div className="text-[10px] text-zinc-500">Pagination & Bates numbers</div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setActiveModal('batchStudio');
+                          setShowToolsMenu(false);
+                        }}
+                        className="flex items-center gap-2.5 p-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-left group"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                          <Layers className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-emerald-600 transition-colors">Batch Surgery (Multi-File)</div>
+                          <div className="text-[10px] text-zinc-500">Bulk watermark, rotate & ZIP</div>
                         </div>
                       </button>
                     </div>
@@ -949,7 +967,7 @@ export const Header: React.FC = () => {
                   {/* Category 3: Intelligence & Security */}
                   <div>
                     <div className="px-1.5 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-                      Document Intelligence & Security
+                      Document Intelligence & Accessibility
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                       <button
@@ -981,6 +999,38 @@ export const Header: React.FC = () => {
                         <div>
                           <div className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-emerald-600 transition-colors">Smart Table to Excel</div>
                           <div className="text-[10px] text-zinc-500">Extract tables to .xlsx/CSV</div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setActiveModal('ttsReader');
+                          setShowToolsMenu(false);
+                        }}
+                        className="flex items-center gap-2.5 p-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-left group"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                          <Volume2 className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-blue-600 transition-colors">Natural Voice Reader (TTS)</div>
+                          <div className="text-[10px] text-zinc-500">Read PDF aloud with word tracker</div>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setActiveModal('barcodeGenerator');
+                          setShowToolsMenu(false);
+                        }}
+                        className="flex items-center gap-2.5 p-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-left group"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                          <QrCode className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-purple-600 transition-colors">QR & Barcode Stamper</div>
+                          <div className="text-[10px] text-zinc-500">Vector QR, WiFi, vCard, 1D code</div>
                         </div>
                       </button>
 

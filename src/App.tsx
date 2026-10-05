@@ -19,6 +19,9 @@ import { FormResponsesModal } from './components/Modals/FormResponsesModal';
 import { PdfDiffModal } from './components/Modals/PdfDiffModal';
 import { TableExtractorModal } from './components/Modals/TableExtractorModal';
 import { PdfToPptModal } from './components/Modals/PdfToPptModal';
+import { BarcodeModal } from './components/Modals/BarcodeModal';
+import { BatchProcessingModal } from './components/Modals/BatchProcessingModal';
+import { TtsReaderModal } from './components/Modals/TtsReaderModal';
 
 export const App: React.FC = () => {
   const { documentBytes, activeModal, isLoading, loadingMessage } = usePDFStore();
@@ -57,6 +60,9 @@ export const App: React.FC = () => {
       {activeModal === 'pdfDiff' && <PdfDiffModal />}
       {activeModal === 'tableExtractor' && <TableExtractorModal />}
       {activeModal === 'pdfToPpt' && <PdfToPptModal />}
+      {activeModal === 'barcodeGenerator' && <BarcodeModal />}
+      {activeModal === 'batchStudio' && <BatchProcessingModal />}
+      {activeModal === 'ttsReader' && <TtsReaderModal />}
 
       {/* Loading Overlay */}
       {isLoading && (
