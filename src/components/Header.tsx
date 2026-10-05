@@ -35,7 +35,8 @@ import {
   Image as ImageIcon,
   FileUp,
   Lock,
-  FileCode
+  FileCode,
+  ScanText
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
@@ -800,6 +801,20 @@ export const Header: React.FC = () => {
                     <div>
                       <div className="font-semibold">Word (.docx) Studio</div>
                       <div className="text-[10px] text-zinc-500">Two-way PDF ↔ Word conversion</div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setActiveModal('ocr');
+                      setShowToolsMenu(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-2.5 py-2 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors text-left"
+                  >
+                    <ScanText className="w-4 h-4 text-purple-500" />
+                    <div>
+                      <div className="font-semibold">OCR (Text Recognition)</div>
+                      <div className="text-[10px] text-zinc-500">Scan to searchable & editable PDF</div>
                     </div>
                   </button>
 
